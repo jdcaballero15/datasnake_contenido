@@ -1,0 +1,72 @@
+# Lote semanal de contenido — domingos 08:00 ARG (11:00 UTC).
+#
+# IMPORTANTE: el PRIMER cron de un workflow nuevo no suele dispararse solo;
+# la primera corrida se lanza a mano con el botón de workflow_dispatch
+# (Actions → Generar contenido Data Snake → Run workflow). De ahí en más el cron anda.
+#
+# Publicación 100% MANUAL: este workflow solo genera el lote y lo deja en Drive
+# (y como artifact de respaldo). No hay workflow de publicación (sin Meta API).
+#
+# Secrets necesarios (Settings → Secrets and variables → Actions):
+#   GEMINI_API_KEY    — API key de https://aistudio.google.com (free tier)
+#   GDRIVE_TOKEN      — JSON que imprime `rclone authorize "drive"` (token OAuth
+#                       de la cuenta dueña de la carpeta; las service accounts ya
+#                       no tienen cuota de almacenamiento en Drives personales)
+#   GDRIVE_FOLDER_ID  — ID de la carpeta destino en Drive
+#                       (el ID es lo que sigue a /folders/ en la URL de Drive)
+# Detalle paso a paso: MANUAL-TECNICO.md
+
+name: Generar contenido Data Snake
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 11 * * 0"   # domingos 11:00 UTC = 08:00 ARG
+
+jobs:
+  generar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - run: pip install -r requirements.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y rclone ffmpeg
+
+      - name: Generar lote
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m src.main
+
+      - name: Subir a Drive
+        env:
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          # Al pegar el secret en GitHub a veces se cuela un BOM UTF-8 (EF BB BF)
+          # o espacios delante del JSON; rclone entonces no puede parsear el token
+          # y no sube nada. Recortamos todo lo que haya antes del primer '{'.
+          export RCLONE_CONFIG_GDRIVE_TOKEN="{${RCLONE_CONFIG_GDRIVE_TOKEN#*\{}"
+          rclone copy salida/ gdrive: --exclude "**/00-CAPTIONS.txt" || echo "Drive falló"
+          rclone copy salida/ gdrive: --include "**/00-CAPTIONS.txt" \
+            --drive-import-formats txt --drive-export-formats txt || true
+
+      - name: Guardar lote como artifact (respaldo)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with: { name: lote, path: salida/, retention-days: 14 }
+
+      - name: Commitear estado
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add estado/*.json
+          git commit -m "estado: corrida $(date +%F)" || echo "sin cambios"
+          git push || echo "sin push"

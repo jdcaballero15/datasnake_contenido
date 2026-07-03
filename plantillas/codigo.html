@@ -1,0 +1,7 @@
+<!doctype html><html><head>{% include "_estilos.html" %}</head><body>
+  <div class="tag">{{ lenguaje|upper }}</div>
+  <pre style="background:{{ c.surface }};border:2px solid {{ c.borde }};border-radius:24px;
+              padding:44px;margin-top:36px;font-size:38px;line-height:1.5;color:{{ c.texto }};
+              white-space:pre-wrap;word-break:break-word;">{{ codigo }}</pre>
+  <div class="pie"><img class="logo" src="{{ logo_uri }}"> @{{ ig_handle }}</div>
+</body></html>

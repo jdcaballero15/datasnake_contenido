@@ -1,0 +1,21 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1080px; height:1350px; }
+  body {
+    background:{{ c.fondo }};
+    color:{{ c.texto }};
+    font-family:'Sora',system-ui,sans-serif;
+    padding:96px 88px;
+    display:flex; flex-direction:column;
+    position:relative; overflow:hidden;
+  }
+  .grad { background:linear-gradient(120deg,{{ c.grad_a }},{{ c.grad_b }});
+          -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .tag { color:{{ c.texto_sec }}; font-size:34px; font-weight:600;
+         letter-spacing:.12em; text-transform:uppercase; }
+  .logo { height:64px; opacity:.95; }
+  .pie { margin-top:auto; display:flex; align-items:center; gap:20px;
+         color:{{ c.texto_sec }}; font-size:30px; }
+  code, pre { font-family:'JetBrains Mono',monospace; }
+</style>

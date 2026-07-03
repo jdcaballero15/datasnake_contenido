@@ -1,0 +1,6 @@
+[
+  {"nombre": "Power BI", "url": "https://powerbi.microsoft.com/en-us/blog/feed/"},
+  {"nombre": "AWS Big Data", "url": "https://aws.amazon.com/blogs/big-data/feed/"},
+  {"nombre": "Tableau", "url": "https://www.tableau.com/blog/feed"},
+  {"nombre": "Anthropic News", "url": "https://www.anthropic.com/news/rss.xml"}
+]

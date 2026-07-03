@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+  <title>Power BI Blog</title>
+  <item>
+    <title>Nueva función de copilot en Power BI</title>
+    <link>https://example.com/nuevo-copilot</link>
+    <guid>https://example.com/nuevo-copilot</guid>
+    <description>Ahora podés generar medidas DAX describiéndolas en lenguaje natural.</description>
+    <pubDate>__RECIENTE__</pubDate>
+  </item>
+  <item>
+    <title>Novedad vieja</title>
+    <link>https://example.com/vieja</link>
+    <guid>https://example.com/vieja</guid>
+    <description>Algo de hace un año.</description>
+    <pubDate>Mon, 01 Jul 2024 10:00:00 GMT</pubDate>
+  </item>
+</channel></rss>

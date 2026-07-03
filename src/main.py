@@ -11,7 +11,6 @@ import random
 import sys
 import time
 from datetime import date
-from pathlib import Path
 
 from src import exportar
 from src.config import (CTA_COMPARTIR, CTA_GUARDAR, HASHTAGS_DEFAULT, Config,

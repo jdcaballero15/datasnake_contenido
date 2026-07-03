@@ -33,12 +33,12 @@ class Renderer:
     """Renderiza placas reutilizando un único Chromium. Uso:
 
     with Renderer(cfg) as r:
-        r.render_placa({"plantilla": "frase", ...}, destino)
+        r.render_placa({"plantilla": "portada", ...}, destino)
     """
 
     def __init__(self, cfg: Config):
         self.cfg = cfg
-        self.env = Environment(loader=FileSystemLoader(cfg.dir_plantillas))
+        self.env = Environment(loader=FileSystemLoader(cfg.dir_plantillas), autoescape=True)
         self._pw = None
         self._browser = None
         self._page = None

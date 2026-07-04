@@ -128,6 +128,7 @@ def construir_placas(tipo: str, red: dict) -> list[dict]:
             "lenguaje": red.get("lenguaje", "sql"),
             "codigo": red["codigo"],
             "variant": "code",
+            "module_label": "código",
         })
     placas.append({"plantilla": "cierre", "variant": "close"})
 

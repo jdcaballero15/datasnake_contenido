@@ -84,3 +84,4 @@ def test_construir_placas_uses_code_variant_for_tip_snippet():
 
     assert [p["plantilla"] for p in placas] == ["portada", "idea", "codigo", "cierre"]
     assert [p["variant"] for p in placas] == ["cover", "dark", "code", "close"]
+    assert placas[2]["module_label"] == "código"

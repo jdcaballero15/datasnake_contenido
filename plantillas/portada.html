@@ -1,5 +1,17 @@
 <!doctype html><html><head>{% include "_estilos.html" %}</head><body>
-  <div class="tag">{{ tag }}</div>
-  <h1 class="grad" style="font-size:110px;font-weight:800;line-height:1.05;margin-top:40px;white-space:pre-line;">{{ titulo }}</h1>
-  <div class="pie"><img class="logo" src="{{ logo_uri }}"> @{{ ig_handle }}</div>
+<main class="plate variant-{{ variant }}">
+  <header class="plate-header">
+    <span>@{{ ig_handle }}</span>
+    <span>{{ "%02d"|format(slide_index|default(1)) }} / {{ "%02d"|format(slide_total|default(1)) }}</span>
+  </header>
+  <div class="kicker">{{ tag }}</div>
+  <h1 class="title">{{ titulo }}</h1>
+  <div class="accent-rule"></div>
+  <p class="lede">{{ subtitulo|default("Herramientas, resultados y carrera en data") }}</p>
+  <footer class="plate-footer">
+    <span>DESLIZA →</span>
+    <span class="progress">{% for n in range(1, (slide_total|default(1)) + 1) %}<span class="progress-dot{% if n == (slide_index|default(1)) %} active{% endif %}"></span>{% endfor %}</span>
+    <span>GUARDAR ■</span>
+  </footer>
+</main>
 </body></html>

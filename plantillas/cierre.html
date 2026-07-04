@@ -1,6 +1,20 @@
 <!doctype html><html><head>{% include "_estilos.html" %}</head><body>
-  <img class="logo" style="height:120px;" src="{{ logo_uri }}">
-  <h2 class="grad" style="font-size:72px;font-weight:800;margin-top:48px;">{{ eslogan }}</h2>
-  <p style="font-size:44px;margin-top:36px;color:{{ c.texto_sec }};">Seguí a @{{ ig_handle }} por más.</p>
-  <div class="pie">@{{ ig_handle }}</div>
+<main class="plate variant-{{ variant }}">
+  <header class="plate-header">
+    <span>@{{ ig_handle }}</span>
+    <span>{{ "%02d"|format(slide_index|default(1)) }} / {{ "%02d"|format(slide_total|default(1)) }}</span>
+  </header>
+  <div class="close-mark">
+    <img class="brand-logo" src="{{ logo_uri }}">
+    <div class="kicker" style="margin-top:0;">Data Snake</div>
+  </div>
+  <h2 class="title">GUARDALO<br>PARA TU<br>PRÓXIMO<br>PROYECTO.</h2>
+  <div class="accent-rule"></div>
+  <p class="close-copy"><strong>@{{ ig_handle }}</strong><br>{{ eslogan }}</p>
+  <footer class="plate-footer">
+    <span>COMPARTIR →</span>
+    <span class="progress">{% for n in range(1, (slide_total|default(1)) + 1) %}<span class="progress-dot{% if n == (slide_index|default(1)) %} active{% endif %}"></span>{% endfor %}</span>
+    <span>GUARDAR ■</span>
+  </footer>
+</main>
 </body></html>

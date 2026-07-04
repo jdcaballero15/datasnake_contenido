@@ -1,5 +1,6 @@
 from src import main
 from src.config import get_config
+from src.main import construir_placas
 
 
 def test_plan_semana_sin_novedad_da_tres_evergreen(monkeypatch, tmp_path):
@@ -54,3 +55,32 @@ def test_plan_semana_usa_seeds_deterministas(monkeypatch, tmp_path):
     monkeypatch.setattr(main, "seleccionar", spy)
     main.plan_semana(cfg, seed=202627, novedad=None)  # no novedad → 3 evergreen slots
     assert seeds == [202628, 202629, 202630]  # seed+1, +2, +3 — deterministic, not hash-based
+
+
+def test_construir_placas_adds_carousel_metadata_to_every_plate():
+    red = {
+        "titulo_portada": "EXCEL VS\nPYTHON",
+        "ideas": [
+            {"titulo": "Excel", "texto": "Rápido para algo puntual."},
+            {"titulo": "Python", "texto": "Reproducible para procesos repetidos."},
+        ],
+    }
+    placas = construir_placas("comparativa", red)
+
+    assert [p["slide_index"] for p in placas] == [1, 2, 3, 4]
+    assert {p["slide_total"] for p in placas} == {4}
+    assert placas[0]["variant"] == "cover"
+    assert placas[-1]["variant"] == "close"
+
+
+def test_construir_placas_uses_code_variant_for_tip_snippet():
+    red = {
+        "titulo_portada": "TOP N\nEN SQL",
+        "ideas": [{"titulo": "Cómo", "texto": "ROW_NUMBER con PARTITION BY."}],
+        "codigo": "SELECT 1;",
+        "lenguaje": "sql",
+    }
+    placas = construir_placas("tip", red)
+
+    assert [p["plantilla"] for p in placas] == ["portada", "idea", "codigo", "cierre"]
+    assert [p["variant"] for p in placas] == ["cover", "dark", "code", "close"]

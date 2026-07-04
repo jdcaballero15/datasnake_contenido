@@ -107,14 +107,34 @@ def construir_placas(tipo: str, red: dict) -> list[dict]:
     tag = {"novedad": "Novedad", "comparativa": "Comparativa",
            "rol": "Carrera en data", "tip": "Tip"}[tipo]
     plantilla_idea = "comparativa" if tipo == "comparativa" else "idea"
-    placas = [{"plantilla": "portada", "tag": tag, "titulo": red["titulo_portada"]}]
+    placas = [{
+        "plantilla": "portada",
+        "tag": tag,
+        "titulo": red["titulo_portada"],
+        "variant": "cover",
+    }]
     for i, b in enumerate(red["ideas"], start=1):
-        placas.append({"plantilla": plantilla_idea, "numero": i,
-                       "titulo": b["titulo"], "texto": b["texto"]})
+        placas.append({
+            "plantilla": plantilla_idea,
+            "numero": i,
+            "titulo": b["titulo"],
+            "texto": b["texto"],
+            "variant": "light" if tipo == "comparativa" and i == len(red["ideas"]) else "dark",
+            "module_label": "cuándo conviene" if tipo == "comparativa" else "qué resuelve",
+        })
     if tipo == "tip" and red.get("codigo"):
-        placas.append({"plantilla": "codigo", "lenguaje": red.get("lenguaje", "sql"),
-                       "codigo": red["codigo"]})
-    placas.append({"plantilla": "cierre"})
+        placas.append({
+            "plantilla": "codigo",
+            "lenguaje": red.get("lenguaje", "sql"),
+            "codigo": red["codigo"],
+            "variant": "code",
+        })
+    placas.append({"plantilla": "cierre", "variant": "close"})
+
+    total = len(placas)
+    for i, placa in enumerate(placas, start=1):
+        placa["slide_index"] = i
+        placa["slide_total"] = total
     return placas
 
 

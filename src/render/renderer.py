@@ -64,6 +64,10 @@ class Renderer:
     def render_placa(self, contexto: dict, destino: Path) -> Path:
         """contexto["plantilla"]: portada | idea | codigo | comparativa | cierre."""
         contexto = dict(contexto)
+        contexto.setdefault("slide_index", 1)
+        contexto.setdefault("slide_total", 1)
+        contexto.setdefault("variant", "dark")
+        contexto.setdefault("module_label", "qué resuelve")
         contexto.setdefault("logo_uri", _como_data_uri(self.cfg.ruta_logo))
         contexto.setdefault("ig_handle", self.cfg.ig_handle)
         contexto.setdefault("eslogan", ESLOGAN)

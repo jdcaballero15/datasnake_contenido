@@ -102,3 +102,23 @@ _IDEA_ROL = {"titulo": "SQL", "deck": "d",
 
 def test_validar_acepta_rol():
     validar("rol", _red(ideas=[_IDEA_ROL]))  # no levanta
+
+
+def test_validar_rechaza_secciones_como_lista_de_strings():
+    """Si Gemini devuelve 'secciones' como lista de strings en vez de objetos
+    {label, texto}, validar() tiene que levantar ValueError (no AttributeError:
+    ese no lo atrapa el except de redactar_pieza y voltea todo el lote)."""
+    idea = {"titulo": "t", "deck": "d", "secciones": ["qué cambió: algo"]}
+    with pytest.raises(ValueError):
+        validar("novedad", {**BASE, "ideas": [idea]})
+
+
+def test_validar_rechaza_texto_de_seccion_que_no_es_string():
+    """Si una sección trae 'texto' como lista (o cualquier no-string), tiene
+    que ser ValueError, no el AttributeError de .strip() sobre una lista."""
+    idea = {"titulo": "t", "deck": "d", "secciones": [
+        {"label": "qué cambió", "texto": ["a"]},
+        {"label": "por qué importa", "texto": "y"},
+    ]}
+    with pytest.raises(ValueError):
+        validar("novedad", {**BASE, "ideas": [idea]})

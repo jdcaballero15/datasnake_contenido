@@ -146,6 +146,51 @@ def test_redactar_pieza_tip_inyecta_el_codigo_entre_las_otras_dos_secciones(monk
         "label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
 
 
+def test_redactar_pieza_cae_a_plan_b_si_secciones_es_lista_de_strings(monkeypatch, tmp_path):
+    """Reproduce el CRÍTICO 1 de la revisión: Gemini devuelve 'secciones' como
+    lista de strings en vez de objetos {label, texto}. Antes esto tiraba un
+    AttributeError que no entraba en el except de redactar_pieza y volteaba
+    todo el lote; ahora tiene que caer a plan B como cualquier respuesta
+    inválida."""
+    cfg = get_config()
+    cfg.dir_estado = tmp_path
+    cfg.gemini_api_key = "fake"
+    respuesta_malformada = {
+        "titulo_portada": "X",
+        "ideas": [{"titulo": "t", "deck": "d", "secciones": ["qué cambió: algo"]}],
+        "caption": "c" * 500, "hashtags": ["data"],
+    }
+    monkeypatch.setattr(main, "generar_json", lambda prompt, key: respuesta_malformada)
+
+    item = {"titulo": "Power BI suma Copilot", "resumen": "Genera DAX en lenguaje natural.",
+            "fuente": "Power BI Blog", "id": "http://x/1"}
+    red = main.redactar_pieza("novedad", item, cfg)
+
+    assert red["plan_b"] is True
+
+
+def test_redactar_pieza_cae_a_plan_b_si_texto_de_seccion_no_es_string(monkeypatch, tmp_path):
+    """Mismo CRÍTICO 1, otra variante: 'texto' de una sección viene como lista."""
+    cfg = get_config()
+    cfg.dir_estado = tmp_path
+    cfg.gemini_api_key = "fake"
+    respuesta_malformada = {
+        "titulo_portada": "X",
+        "ideas": [{"titulo": "t", "deck": "d", "secciones": [
+            {"label": "qué cambió", "texto": ["a"]},
+            {"label": "por qué importa", "texto": "y"},
+        ]}],
+        "caption": "c" * 500, "hashtags": ["data"],
+    }
+    monkeypatch.setattr(main, "generar_json", lambda prompt, key: respuesta_malformada)
+
+    item = {"titulo": "Power BI suma Copilot", "resumen": "Genera DAX en lenguaje natural.",
+            "fuente": "Power BI Blog", "id": "http://x/1"}
+    red = main.redactar_pieza("novedad", item, cfg)
+
+    assert red["plan_b"] is True
+
+
 def test_plan_b_comparativa_con_opciones_objeto():
     """Test que reproduzca el error: opciones son dicts, no strings."""
     item = {

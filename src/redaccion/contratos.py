@@ -38,13 +38,29 @@ def validar(tipo: str, datos: dict) -> None:
             raise ValueError(f"{tipo}: {len(datos['ideas'])} ideas fuera de rango")
     esperadas = secciones_que_redacta_gemini(tipo)
     for i, idea in enumerate(datos["ideas"], start=1):
-        labels = [seccion.get("label") for seccion in idea.get("secciones", [])]
+        if not isinstance(idea, dict):
+            raise ValueError(f"{tipo}: idea {i} no es un objeto ({idea!r})")
+        secciones = idea.get("secciones", [])
+        # Defensa en profundidad: si Gemini manda basura con una forma inesperada
+        # (p.ej. "secciones" como lista de strings, o un "texto" que no es str),
+        # esto tiene que ser un ValueError -no un AttributeError/TypeError de
+        # .get()/.strip() sobre el tipo equivocado-, porque redactar_pieza solo
+        # atrapa (GeminiError, ValueError, KeyError, TypeError) antes de caer a
+        # plan B; un AttributeError se escapa y voltea todo el lote.
+        if not isinstance(secciones, list) or not all(isinstance(s, dict) for s in secciones):
+            raise ValueError(
+                f"{tipo}: idea {i} tiene 'secciones' mal formadas, se esperaba una "
+                f"lista de objetos {{label, texto}} (llegó {secciones!r})")
+        labels = [seccion.get("label") for seccion in secciones]
         if labels != esperadas:
             raise ValueError(
                 f"{tipo}: idea {i} tiene secciones {labels!r}, se esperaba "
                 f"exactamente {esperadas!r} en ese orden (revisá labels y orden)")
-        for seccion in idea.get("secciones", []):
-            if not seccion.get("texto", "").strip():
-                raise ValueError(f"{tipo}: idea {i} tiene una sección vacía")
+        for seccion in secciones:
+            texto = seccion.get("texto", "")
+            if not isinstance(texto, str) or not texto.strip():
+                raise ValueError(
+                    f"{tipo}: idea {i} tiene una sección vacía o con 'texto' inválido "
+                    f"({texto!r})")
     if tipo == "tip" and not datos["codigo"].strip():
         raise ValueError("tip: codigo vacío")

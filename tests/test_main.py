@@ -20,13 +20,59 @@ def test_plan_semana_con_novedad(tmp_path):
     assert len(piezas) == 3  # 1 novedad + 2 evergreen
 
 
-def test_construir_placas_tip_incluye_codigo():
-    red = {"titulo_portada": "X", "ideas": [{"titulo": "a", "texto": "b"}],
-           "codigo": "SELECT 1;", "lenguaje": "sql"}
+IDEA = {"titulo": "Excel", "deck": "Limpiar filas",
+        "secciones": [{"label": "cuándo conviene", "texto": "Una sola vez."}]}
+
+
+def test_construir_placas_usa_una_placa_contenido_por_idea():
+    red = {"titulo_portada": "EXCEL VS\nPYTHON", "ideas": [IDEA, IDEA]}
+
+    placas = main.construir_placas("comparativa", red)
+
+    assert [p["plantilla"] for p in placas] == ["portada", "contenido", "contenido", "cierre"]
+    assert [p["slide_index"] for p in placas] == [1, 2, 3, 4]
+    assert {p["slide_total"] for p in placas} == {4}
+    assert placas[0]["variant"] == "cover" and placas[-1]["variant"] == "close"
+
+
+def test_construir_placas_pasa_secciones_y_kicker():
+    red = {"titulo_portada": "X", "ideas": [IDEA]}
+
+    placa = main.construir_placas("comparativa", red)[1]
+
+    assert placa["kicker"] == "opción 01"
+    assert placa["deck"] == "Limpiar filas"
+    assert placa["secciones"] == IDEA["secciones"]
+
+
+def test_tercera_idea_sale_en_placa_clara():
+    red = {"titulo_portada": "X", "ideas": [IDEA, IDEA, IDEA, IDEA]}
+
+    variants = [p["variant"] for p in main.construir_placas("rol", red)]
+
+    assert variants == ["cover", "dark", "dark", "light", "dark", "close"]
+
+
+def test_construir_placas_tip_mete_el_codigo_como_seccion():
+    red = {"titulo_portada": "TOP N", "codigo": "SELECT 1;", "lenguaje": "sql",
+           "ideas": [{"titulo": "Top N", "texto": "ROW_NUMBER con PARTITION BY."}]}
+
     placas = main.construir_placas("tip", red)
-    plantillas = [p["plantilla"] for p in placas]
-    assert "codigo" in plantillas
-    assert plantillas[0] == "portada" and plantillas[-1] == "cierre"
+
+    assert [p["plantilla"] for p in placas] == ["portada", "contenido", "cierre"]
+    labels = [s["label"] for s in placas[1]["secciones"]]
+    assert "el código" in labels
+
+
+def test_plan_b_tip_arma_ideas_densas():
+    item = {"titulo": "Top N en SQL", "gancho": "Top N por grupo.", "codigo": "SELECT 1;",
+            "lenguaje": "sql", "explicacion": "ROW_NUMBER numera por grupo."}
+
+    red = main.plan_b("tip", item)
+
+    assert red["plan_b"] is True
+    assert [s["label"] for s in red["ideas"][0]["secciones"]] == [
+        "el problema", "el código", "por qué funciona"]
 
 
 def test_armar_caption_agrega_ctas_y_hashtags():
@@ -73,7 +119,7 @@ def test_construir_placas_adds_carousel_metadata_to_every_plate():
     assert placas[-1]["variant"] == "close"
 
 
-def test_plan_b_rol_usa_nombres_de_skills_ricas():
+def test_plan_b_rol_usa_ideas_densas_por_skill():
     item = {"id": "r01", "rol": "Data Analyst", "gancho": "g",
             "herramientas": ["SQL", "Power BI"],
             "skills": [
@@ -83,21 +129,9 @@ def test_plan_b_rol_usa_nombres_de_skills_ricas():
     red = main.plan_b("rol", item)
     assert "SQL" in red["caption"] and "Power BI" in red["caption"]
     assert "{'nombre'" not in red["caption"]
-    assert red["ideas"][0]["texto"] == "SQL, Power BI"
-
-
-def test_construir_placas_uses_code_variant_for_tip_snippet():
-    red = {
-        "titulo_portada": "TOP N\nEN SQL",
-        "ideas": [{"titulo": "Cómo", "texto": "ROW_NUMBER con PARTITION BY."}],
-        "codigo": "SELECT 1;",
-        "lenguaje": "sql",
-    }
-    placas = construir_placas("tip", red)
-
-    assert [p["plantilla"] for p in placas] == ["portada", "idea", "codigo", "cierre"]
-    assert [p["variant"] for p in placas] == ["cover", "dark", "code", "close"]
-    assert placas[2]["module_label"] == "qué resuelve"
+    assert [i["titulo"] for i in red["ideas"]] == ["SQL", "Power BI"]
+    assert [s["label"] for s in red["ideas"][0]["secciones"]] == [
+        "por qué te la piden", "cómo la practicás"]
 
 
 def test_plan_b_comparativa_con_opciones_objeto():

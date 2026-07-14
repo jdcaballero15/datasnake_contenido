@@ -45,7 +45,9 @@ No exageres ni prometas lo que no dice el material.
 
 
 def prompt_comparativa(item: dict) -> str:
-    opciones = "\n".join(f"- {o}" for o in item["opciones"])
+    opciones = "\n".join(
+        f"- {o['nombre']}: conviene si {o['cuando_conviene']} Duele en que {o['donde_duele']}"
+        for o in item["opciones"])
     return f"""{VOZ_DE_MARCA}
 
 Material — comparativa para la tarea: "{item['tarea']}".

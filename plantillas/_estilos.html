@@ -1,85 +1,85 @@
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@500;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
   * { margin:0; padding:0; box-sizing:border-box; }
   html,body { width:1080px; height:1350px; }
-  body {
-    width:1080px; height:1350px; overflow:hidden;
-    font-family:'Archivo',system-ui,sans-serif;
-    letter-spacing:0;
-  }
+  body { width:1080px; height:1350px; overflow:hidden; font-family:'Archivo',system-ui,sans-serif; }
+
   .plate {
-    width:1080px; height:1350px; padding:86px 76px 72px;
+    width:1080px; height:1350px; padding:72px 76px 64px;
     display:flex; flex-direction:column; position:relative; overflow:hidden;
-    color:{{ c.texto }};
   }
-  .variant-cover { background:{{ c.acento }}; color:#07111D; }
-  .variant-dark, .variant-code, .variant-close { background:{{ c.fondo }}; color:{{ c.texto }}; }
-  .variant-light { background:#EEF3F6; color:#111827; }
-  .variant-cover::after {
-    content:""; position:absolute; right:-120px; bottom:210px; width:360px; height:360px;
-    border:34px solid rgba(46,230,166,.28); border-radius:50%;
+  .variant-cover { background:{{ c.grad_b }}; color:#0B1F1A; }
+  .variant-dark, .variant-close { background:{{ c.fondo }}; color:{{ c.texto }}; }
+  .variant-light { background:{{ c.hueso }}; color:#111827; }
+
+  .plate-header {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:26px; font-weight:700; opacity:.85;
   }
-  .plate-header, .plate-footer {
-    position:relative; z-index:2; display:flex; justify-content:space-between; align-items:center;
-    font-size:30px; font-weight:700; letter-spacing:.02em;
-  }
-  .plate-header { color:currentColor; opacity:.88; }
   .plate-footer {
-    margin-top:auto; font-size:24px; letter-spacing:.16em; text-transform:uppercase;
-    font-weight:900; opacity:.92;
+    margin-top:auto; display:flex; justify-content:space-between; align-items:center;
+    font-size:22px; letter-spacing:.14em; text-transform:uppercase; font-weight:900; opacity:.9;
   }
-  .progress { display:flex; gap:12px; align-items:center; }
-  .progress-dot { width:11px; height:11px; border-radius:50%; background:currentColor; opacity:.28; }
-  .progress-dot.active { opacity:1; background:{{ c.grad_b }}; }
-  .variant-light .progress-dot.active, .variant-cover .progress-dot.active { background:#111827; }
-  /* margin-top:auto acá y en .plate-footer reparte el aire sobrante entre header
-     y footer: el bloque de contenido queda centrado sin importar cuánto texto traiga. */
+  .progress { display:flex; gap:10px; align-items:center; }
+  .progress-dot { width:10px; height:10px; border-radius:50%; background:currentColor; opacity:.3; }
+  .progress-dot.active { opacity:1; }
+
+  /* El bloque de contenido (kicker → título → deck → panel) se centra entre el
+     header y el pie: este margin-top:auto y el del .plate-footer se reparten el
+     aire sobrante en partes iguales. El panel abraza a su contenido (no estira),
+     así una sección corta no deja una caja enorme medio vacía. */
   .kicker {
-    position:relative; z-index:2; margin-top:auto; font-size:28px; line-height:1;
-    letter-spacing:.18em; text-transform:uppercase; font-weight:900; color:{{ c.grad_b }};
+    margin-top:auto; font-size:24px; letter-spacing:.2em; text-transform:uppercase;
+    font-weight:900; color:{{ c.grad_b }};
   }
-  .variant-cover .kicker, .variant-light .kicker { color:#111827; }
-  .variant-code .kicker { color:{{ c.grad_b }}; }
+  .variant-light .kicker { color:{{ c.grad_a }}; }
+  .variant-cover .kicker { color:#0B1F1A; }
+
   .title {
-    position:relative; z-index:2; margin-top:28px; font-size:104px; line-height:.94;
-    font-weight:900; text-transform:uppercase; white-space:pre-line; letter-spacing:0;
+    font-family:'Anton',Impact,sans-serif; font-weight:400; text-transform:uppercase;
+    line-height:.94; letter-spacing:.01em; margin-top:16px; font-size:118px; white-space:pre-line;
   }
-  .title-medium { font-size:88px; }
-  .accent-rule {
-    position:relative; z-index:2; width:112px; height:8px; border-radius:999px;
-    background:{{ c.grad_b }}; margin-top:32px;
+  .title-medium { font-size:94px; }
+  .variant-dark .title { color:{{ c.grad_b }}; }
+  .variant-light .title { color:{{ c.grad_a }}; }
+
+  .deck { margin-top:20px; font-size:38px; line-height:1.2; font-weight:700; max-width:900px; }
+  .variant-dark .deck { color:#FFFFFF; }
+  .cover-deck { margin-top:26px; font-size:34px; font-weight:500; line-height:1.3; max-width:820px; }
+
+  .panel {
+    margin-top:34px; background:{{ c.surface }}; border:2px solid {{ c.borde }};
+    border-radius:24px; padding:34px 38px;
   }
-  .variant-light .accent-rule, .variant-cover .accent-rule { background:#111827; }
-  .lede {
-    position:relative; z-index:2; margin-top:34px; font-size:42px; line-height:1.22;
-    max-width:880px; font-weight:500;
+  .variant-light .panel { background:{{ c.fondo }}; border-color:{{ c.fondo }}; }
+  .section + .section { margin-top:26px; }
+  .section-label {
+    font-size:23px; letter-spacing:.16em; text-transform:uppercase; font-weight:900;
+    color:{{ c.grad_b }}; margin-bottom:10px;
   }
-  .lede strong, .module-text strong { color:#fff; font-weight:900; }
-  .variant-light .lede strong, .variant-cover .lede strong,
-  .variant-light .module-text strong, .variant-cover .module-text strong { color:#111827; }
-  .content-module {
-    position:relative; z-index:2; margin-top:54px; padding:38px 42px;
-    background:{{ c.surface }}; border:2px solid {{ c.borde }}; border-radius:28px;
+  .section-text { font-size:33px; line-height:1.34; color:{{ c.texto }}; }
+
+  .code-block { background:#07111D; border:1px solid #102034; border-radius:16px; padding:22px 24px; }
+  .code-top { font-family:'JetBrains Mono',monospace; font-size:20px; color:#58708A; margin-bottom:14px; }
+  /* El ancho útil del bloque es ~800px y la mono ocupa ~0.6em por carácter, así
+     que cada escalón entra una línea más larga sin partirla: 28px→48 chars,
+     23px→58, 19px→70. Arriba de eso (una fórmula de Power Query de 102) ya no
+     entra a ningún tamaño legible: se deja envolver. La plantilla elige el
+     escalón según la línea más larga del snippet. */
+  .code-text {
+    font-family:'JetBrains Mono',monospace; font-size:28px; line-height:1.5;
+    color:#9FB2C7; white-space:pre-wrap; word-break:break-word;
   }
-  .variant-light .content-module { background:#111827; color:{{ c.texto }}; }
-  .module-label {
-    color:{{ c.grad_b }}; font-size:26px; letter-spacing:.18em; text-transform:uppercase;
-    font-weight:900; margin-bottom:22px;
+  .code-text.code-md { font-size:23px; }
+  .code-text.code-sm { font-size:19px; }
+  .code-text.code-xs { font-size:16px; }
+
+  .cover-mark {
+    position:absolute; right:-90px; bottom:150px; width:320px; height:320px;
+    border:30px solid rgba(11,31,26,.12); border-radius:50%;
   }
-  .module-text { font-size:38px; line-height:1.32; color:{{ c.texto }}; }
-  .variant-light .module-text { color:{{ c.texto }}; }
-  .terminal-block {
-    margin-top:26px; background:#07111D; border:2px solid #102034; border-left:8px solid {{ c.grad_b }};
-    border-radius:20px; padding:28px 32px; color:#9FB2C7;
-  }
-  .terminal-top { display:flex; gap:12px; color:#58708A; font-family:'JetBrains Mono',monospace; font-size:24px; margin-bottom:22px; }
-  .terminal-dot { width:16px; height:16px; border-radius:50%; background:#34485F; display:inline-block; }
-  .terminal-code {
-    font-family:'JetBrains Mono',monospace; font-size:34px; line-height:1.45;
-    white-space:pre-wrap; word-break:break-word;
-  }
-  .brand-logo { width:126px; height:126px; object-fit:contain; }
-  .close-mark { margin-top:auto; display:flex; align-items:center; gap:24px; }
-  .close-copy { margin-top:54px; font-size:50px; line-height:1.16; color:{{ c.texto_sec }}; }
+  .brand-logo { width:120px; height:120px; object-fit:contain; }
+  .close-mark { margin-top:auto; display:flex; align-items:center; gap:22px; }
+  .close-copy { margin-top:34px; font-size:44px; line-height:1.2; color:{{ c.texto_sec }}; }
   .close-copy strong { color:{{ c.texto }}; }
 </style>

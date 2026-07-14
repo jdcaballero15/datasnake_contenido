@@ -1,0 +1,35 @@
+<!doctype html><html><head>{% include "_estilos.html" %}</head><body>
+<main class="plate variant-{{ variant }}">
+  <header class="plate-header">
+    <span>@{{ ig_handle }}</span>
+    <span>{{ "%02d"|format(slide_index|default(1)) }} / {{ "%02d"|format(slide_total|default(1)) }}</span>
+  </header>
+  <div class="kicker">— {{ kicker }}</div>
+  <h2 class="title title-medium">{{ titulo }}</h2>
+  {% if deck %}<p class="deck">{{ deck }}</p>{% endif %}
+  <section class="panel">
+    {% for s in secciones %}
+    <div class="section">
+      <div class="section-label">➤ {{ s.label|upper }}</div>
+      {% if s.codigo %}
+      {# El cuerpo del código sale de la línea más larga del snippet: los bancos
+         van de un SELECT de 40 caracteres a una fórmula de Power Query de 102, y
+         con un tamaño fijo las largas se parten al medio y se leen rotas. #}
+      {% set ancho = s.codigo.split("\n")|map("length")|max %}
+      <div class="code-block">
+        <div class="code-top">data.snake · {{ s.lenguaje|default("sql") }}</div>
+        <pre class="code-text {% if ancho > 70 %}code-xs{% elif ancho > 58 %}code-sm{% elif ancho > 48 %}code-md{% endif %}">{{ s.codigo }}</pre>
+      </div>
+      {% else %}
+      <p class="section-text">{{ s.texto }}</p>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </section>
+  <footer class="plate-footer">
+    <span>DESLIZA →</span>
+    <span class="progress">{% for n in range(1, (slide_total|default(1)) + 1) %}<span class="progress-dot{% if n == (slide_index|default(1)) %} active{% endif %}"></span>{% endfor %}</span>
+    <span>GUARDAR ■</span>
+  </footer>
+</main>
+</body></html>

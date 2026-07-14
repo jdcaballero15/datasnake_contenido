@@ -1,13 +1,13 @@
 <!doctype html><html><head>{% include "_estilos.html" %}</head><body>
 <main class="plate variant-{{ variant }}">
+  <span class="cover-mark"></span>
   <header class="plate-header">
     <span>@{{ ig_handle }}</span>
     <span>{{ "%02d"|format(slide_index|default(1)) }} / {{ "%02d"|format(slide_total|default(1)) }}</span>
   </header>
   <div class="kicker">{{ tag }}</div>
   <h1 class="title">{{ titulo }}</h1>
-  <div class="accent-rule"></div>
-  <p class="lede">{{ subtitulo|default("Herramientas, resultados y carrera en data") }}</p>
+  <p class="cover-deck">{{ subtitulo|default(eslogan) }}</p>
   <footer class="plate-footer">
     <span>DESLIZA →</span>
     <span class="progress">{% for n in range(1, (slide_total|default(1)) + 1) %}<span class="progress-dot{% if n == (slide_index|default(1)) %} active{% endif %}"></span>{% endfor %}</span>

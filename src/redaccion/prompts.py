@@ -19,6 +19,13 @@ tu mirada técnica y cerrá con el para-qué. SIN llamados a la acción (los
 agregamos nosotros). "hashtags": 4 a 5, sin #, en minúsculas, del mundo
 data/tech (ej. data, sql, powerbi, python, analytics)."""
 
+REGLAS_IDEAS = """\
+Cada "idea" es UNA placa del carrusel y va con: "titulo" (1-3 palabras, entra
+gigante), "deck" (una oración que resume la idea) y "secciones". Las secciones
+tienen LABELS FIJOS que no podés cambiar ni inventar: usá exactamente los que te
+pido, todos, en ese orden. Cada "texto" de sección: 1-2 oraciones, concretas, sin
+números inventados."""
+
 _CIERRE = """Responde SOLO con un JSON válido, exactamente con esta forma:"""
 
 
@@ -29,16 +36,27 @@ Material — novedad de la herramienta (fuente: {item['fuente']}):
 Título: "{item['titulo']}"
 Resumen: {item['resumen']}
 
-TAREA — Convertí la novedad en un carrusel: una portada con el título en corto y
-3 a 5 ideas concretas de QUÉ salió y QUÉ te permite hacer ahora en tu trabajo.
-No exageres ni prometas lo que no dice el material.
+TAREA — Convertí la novedad en un carrusel: portada + UNA idea por CADA CAMBIO
+concreto que trae la herramienta (qué salió y qué te permite hacer ahora en tu
+trabajo). Si el material describe un solo cambio, una sola idea; no inventes
+cambios que no estén en el material. No exageres ni prometas lo que no dice el
+material.
+
+{REGLAS_IDEAS}
 
 {REGLAS_CAPTION}
 
 {_CIERRE}
 {{
   "titulo_portada": "<MAYÚSCULAS, máximo 3 líneas de 1-3 palabras, con \\n>",
-  "ideas": [{{"titulo": "<título corto>", "texto": "<1-3 oraciones>"}}],
+  "ideas": [{{
+    "titulo": "<el cambio, 1-3 palabras>",
+    "deck": "<una oración>",
+    "secciones": [
+      {{"label": "qué cambió", "texto": "<1-2 oraciones>"}},
+      {{"label": "por qué importa", "texto": "<1-2 oraciones>"}}
+    ]
+  }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
   "hashtags": ["<4 a 5>"]
 }}"""
@@ -55,16 +73,24 @@ Opciones:
 {opciones}
 Veredicto sugerido: {item['veredicto']}
 
-TAREA — Armá un carrusel que enfrente las opciones para esa tarea: portada +
-una idea por opción (cuándo conviene cada una) + una idea de cierre con el
-veredicto. Concreto y honesto, sin fanatismos de herramienta.
+TAREA — Armá un carrusel que enfrente las opciones para esa tarea: portada + UNA
+idea por opción. Concreto y honesto, sin fanatismos de herramienta.
+
+{REGLAS_IDEAS}
 
 {REGLAS_CAPTION}
 
 {_CIERRE}
 {{
   "titulo_portada": "<MAYÚSCULAS, máximo 3 líneas de 1-3 palabras, con \\n>",
-  "ideas": [{{"titulo": "<opción o cierre>", "texto": "<1-3 oraciones>"}}],
+  "ideas": [{{
+    "titulo": "<la opción, 1-3 palabras>",
+    "deck": "<una oración>",
+    "secciones": [
+      {{"label": "cuándo conviene", "texto": "<1-2 oraciones>"}},
+      {{"label": "dónde duele", "texto": "<1-2 oraciones>"}}
+    ]
+  }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
   "hashtags": ["<4 a 5>"]
 }}"""
@@ -82,16 +108,25 @@ Skills:
 {skills}
 Herramientas: {", ".join(item['herramientas'])}
 
-TAREA — Armá un carrusel sobre el rol: portada + 3 a 5 ideas (qué hace, qué
-skills/herramientas pide, cómo se llega). Realista y útil para alguien que
+TAREA — Armá un carrusel sobre el rol: portada + UNA idea por SKILL del
+material (no agregues ni saques skills). Realista y útil para alguien que
 evalúa apuntar a ese rol.
+
+{REGLAS_IDEAS}
 
 {REGLAS_CAPTION}
 
 {_CIERRE}
 {{
   "titulo_portada": "<MAYÚSCULAS, máximo 3 líneas de 1-3 palabras, con \\n>",
-  "ideas": [{{"titulo": "<título corto>", "texto": "<1-3 oraciones>"}}],
+  "ideas": [{{
+    "titulo": "<la skill, 1-3 palabras>",
+    "deck": "<una oración>",
+    "secciones": [
+      {{"label": "por qué te la piden", "texto": "<1-2 oraciones>"}},
+      {{"label": "cómo la practicás", "texto": "<1-2 oraciones>"}}
+    ]
+  }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
   "hashtags": ["<4 a 5>"]
 }}"""
@@ -106,16 +141,26 @@ Código:
 {item['codigo']}
 Explicación base: {item['explicacion']}
 
-TAREA — Armá un carrusel con: portada, una placa con la EXPLICACIÓN del tip en
-1-3 ideas, y devolvé el CÓDIGO tal cual para mostrarlo en una placa aparte. No
-cambies el código salvo erratas evidentes.
+TAREA — Armá un carrusel con portada + UNA sola idea: el tip entero (no lo
+partas en varias ideas). Devolvé el CÓDIGO tal cual en el campo "codigo" —no lo
+cambies salvo erratas evidentes— para mostrarlo en una placa aparte; no lo
+repitas dentro de "secciones".
+
+{REGLAS_IDEAS}
 
 {REGLAS_CAPTION}
 
 {_CIERRE}
 {{
   "titulo_portada": "<MAYÚSCULAS, máximo 3 líneas de 1-3 palabras, con \\n>",
-  "ideas": [{{"titulo": "<título corto>", "texto": "<1-3 oraciones>"}}],
+  "ideas": [{{
+    "titulo": "<el tip, 1-3 palabras>",
+    "deck": "<una oración>",
+    "secciones": [
+      {{"label": "el problema", "texto": "<1-2 oraciones>"}},
+      {{"label": "por qué funciona", "texto": "<1-2 oraciones>"}}
+    ]
+  }}],
   "codigo": "<el código, con saltos de línea reales>",
   "lenguaje": "{item['lenguaje']}",
   "caption": "<6-10 oraciones, ~600-900 caracteres>",

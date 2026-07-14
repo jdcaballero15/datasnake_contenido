@@ -24,6 +24,19 @@ def test_prompt_comparativa_lista_opciones():
     assert "{'nombre'" not in p
 
 
+def test_prompts_piden_secciones_con_los_labels_fijos():
+    from src.contenido import SECCIONES_POR_TIPO
+    from src.redaccion import prompts
+
+    p = prompts.prompt_comparativa({
+        "tarea": "Limpiar filas", "veredicto": "Depende.",
+        "opciones": [{"nombre": "Excel", "cuando_conviene": "Una vez.", "donde_duele": "Manual."}]})
+
+    assert "secciones" in p
+    for label in SECCIONES_POR_TIPO["comparativa"]:
+        assert label in p
+
+
 def test_prompt_rol_incluye_material_rico_de_skills():
     item = {"rol": "Data Analyst", "gancho": "g",
             "herramientas": ["SQL", "Power BI"],

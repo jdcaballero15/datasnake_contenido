@@ -63,7 +63,7 @@ class Renderer:
             self._pw.stop()
 
     def render_placa(self, contexto: dict, destino: Path) -> Path:
-        """contexto["plantilla"]: portada | idea | codigo | comparativa | cierre."""
+        """contexto["plantilla"]: portada | contenido | cierre."""
         contexto = dict(contexto)
         contexto.setdefault("slide_index", 1)
         contexto.setdefault("slide_total", 1)

@@ -80,12 +80,26 @@ def plan_b(tipo: str, item: dict) -> dict:
             "codigo": item["codigo"], "lenguaje": item["lenguaje"], "caption": cuerpo}
 
 
+def _inyectar_codigo_tip(datos: dict) -> None:
+    """El código del tip no lo escribe Gemini como texto de sección (ver
+    prompt_tip): viaja aparte en "codigo"/"lenguaje". Acá se arma la sección
+    "el código" y se inserta entre "el problema" y "por qué funciona", igual
+    que hace ideas_desde_item para el plan B."""
+    if not datos["ideas"]:
+        return
+    secciones = datos["ideas"][0]["secciones"]
+    secciones.insert(1, {"label": "el código", "codigo": datos["codigo"],
+                          "lenguaje": datos.get("lenguaje", "sql")})
+
+
 def redactar_pieza(tipo: str, item: dict, cfg: Config) -> dict:
     _, prompt_de = TIPOS[tipo]
     for intento in range(2):
         try:
             datos = generar_json(prompt_de(item), cfg.gemini_api_key)
             validar(tipo, datos)
+            if tipo == "tip":
+                _inyectar_codigo_tip(datos)
             return datos
         except (GeminiError, ValueError, KeyError, TypeError) as e:
             log.warning("Redacción de %s falló (intento %d): %s", tipo, intento + 1, e)
@@ -110,7 +124,7 @@ def construir_placas(tipo: str, red: dict) -> list[dict]:
         "subtitulo": red.get("subtitulo", ESLOGAN),
         "variant": "cover",
     }]
-    for i, idea in enumerate(contenido.normalizar_ideas(tipo, red), start=1):
+    for i, idea in enumerate(red["ideas"], start=1):
         placas.append({
             "plantilla": "contenido",
             "kicker": f"{palabra} {i:02d}",

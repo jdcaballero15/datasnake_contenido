@@ -53,17 +53,6 @@ def test_tercera_idea_sale_en_placa_clara():
     assert variants == ["cover", "dark", "dark", "light", "dark", "close"]
 
 
-def test_construir_placas_tip_mete_el_codigo_como_seccion():
-    red = {"titulo_portada": "TOP N", "codigo": "SELECT 1;", "lenguaje": "sql",
-           "ideas": [{"titulo": "Top N", "texto": "ROW_NUMBER con PARTITION BY."}]}
-
-    placas = main.construir_placas("tip", red)
-
-    assert [p["plantilla"] for p in placas] == ["portada", "contenido", "cierre"]
-    labels = [s["label"] for s in placas[1]["secciones"]]
-    assert "el código" in labels
-
-
 def test_plan_b_tip_arma_ideas_densas():
     item = {"titulo": "Top N en SQL", "gancho": "Top N por grupo.", "codigo": "SELECT 1;",
             "lenguaje": "sql", "explicacion": "ROW_NUMBER numera por grupo."}
@@ -104,13 +93,7 @@ def test_plan_semana_usa_seeds_deterministas(monkeypatch, tmp_path):
 
 
 def test_construir_placas_adds_carousel_metadata_to_every_plate():
-    red = {
-        "titulo_portada": "EXCEL VS\nPYTHON",
-        "ideas": [
-            {"titulo": "Excel", "texto": "Rápido para algo puntual."},
-            {"titulo": "Python", "texto": "Reproducible para procesos repetidos."},
-        ],
-    }
+    red = {"titulo_portada": "EXCEL VS\nPYTHON", "ideas": [IDEA, IDEA]}
     placas = construir_placas("comparativa", red)
 
     assert [p["slide_index"] for p in placas] == [1, 2, 3, 4]
@@ -132,6 +115,35 @@ def test_plan_b_rol_usa_ideas_densas_por_skill():
     assert [i["titulo"] for i in red["ideas"]] == ["SQL", "Power BI"]
     assert [s["label"] for s in red["ideas"][0]["secciones"]] == [
         "por qué te la piden", "cómo la practicás"]
+
+
+def test_redactar_pieza_tip_inyecta_el_codigo_entre_las_otras_dos_secciones(monkeypatch, tmp_path):
+    """El prompt de tip le pide a Gemini solo 'el problema' y 'por qué funciona'
+    (el código viaja en los campos "codigo"/"lenguaje", no como texto de sección).
+    redactar_pieza tiene que armar la sección 'el código' con ese material antes
+    de devolver la pieza, igual que hace ideas_desde_item para el plan B."""
+    cfg = get_config()
+    cfg.dir_estado = tmp_path
+    cfg.gemini_api_key = "fake"
+    respuesta_gemini = {
+        "titulo_portada": "TOP N",
+        "ideas": [{"titulo": "Top N", "deck": "d", "secciones": [
+            {"label": "el problema", "texto": "Sacar el top 3 por categoría."},
+            {"label": "por qué funciona", "texto": "ROW_NUMBER numera por grupo."},
+        ]}],
+        "codigo": "SELECT 1;", "lenguaje": "sql",
+        "caption": "c" * 500, "hashtags": ["sql"],
+    }
+    monkeypatch.setattr(main, "generar_json", lambda prompt, key: respuesta_gemini)
+
+    item = {"titulo": "Top N en SQL", "gancho": "g", "codigo": "SELECT 1;",
+            "lenguaje": "sql", "explicacion": "e"}
+    red = main.redactar_pieza("tip", item, cfg)
+
+    labels = [s["label"] for s in red["ideas"][0]["secciones"]]
+    assert labels == ["el problema", "el código", "por qué funciona"]
+    assert red["ideas"][0]["secciones"][1] == {
+        "label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
 
 
 def test_plan_b_comparativa_con_opciones_objeto():

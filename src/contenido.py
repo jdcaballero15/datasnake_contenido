@@ -4,6 +4,41 @@ Los labels de sección son FIJOS por tipo y viven acá: ni el banco ni Gemini lo
 eligen. Eso es lo que hace que el carrusel se lea igual semana a semana.
 """
 
+import html
+import re
+
+MAX_CHARS_SECCION_TEXTO = 260
+"""Tope de caracteres para el "texto" de una sección de placa. La placa
+(.plate) tiene overflow:hidden: lo que se pasa de largo se corta, no se ve.
+El panel de la placa de contenido renderiza el cuerpo a 33px con ~850px de
+ancho útil (ver plantillas/_estilos.html, .section-text); el peor caso real
+de los bancos hoy es una idea entera (título + 2 secciones) de ~310
+caracteres, así que 260 por sección deja margen sin desbordar. Lo usan tanto
+contratos.validar (respuesta de Gemini) como el truncado del resumen crudo de
+RSS en el plan B de "novedad" (_limpiar_y_truncar_resumen más abajo), para
+que ambos caminos respeten el mismo límite físico."""
+
+_TAG_HTML = re.compile(r"<[^>]+>")
+_ESPACIOS = re.compile(r"\s+")
+
+
+def _limpiar_y_truncar_resumen(texto: str, largo: int = MAX_CHARS_SECCION_TEXTO) -> str:
+    """Resúmenes de RSS (entry.summary de feedparser) sin HTML crudo y
+    acotados al largo que entra en la placa.
+
+    feedparser no limpia el HTML del feed: con autoescape la placa mostraría
+    literalmente "<p>Today we are announcing...</p>". Y los feeds suelen
+    mandar resúmenes de ~1.100 caracteres, muy por encima de lo que entra en
+    el panel. El corte respeta el límite de palabra (no parte una palabra al
+    medio) y cierra con elipsis para que quede claro que sigue en el link."""
+    sin_tags = _TAG_HTML.sub(" ", texto)
+    limpio = _ESPACIOS.sub(" ", html.unescape(sin_tags)).strip()
+    if len(limpio) <= largo:
+        return limpio
+    corte = limpio[:largo].rsplit(" ", 1)[0].rstrip(" .,;:-")
+    return f"{corte}…"
+
+
 # Cada placa de contenido de una pieza es "una unidad" del tipo:
 #   novedad → un cambio | comparativa → una opción | rol → una skill | tip → el tip
 SECCIONES_POR_TIPO: dict[str, list[str]] = {
@@ -92,7 +127,7 @@ def ideas_desde_item(tipo: str, item: dict) -> list[dict]:
         "titulo": item["titulo"],
         "deck": item.get("fuente", ""),
         "secciones": [
-            {"label": "qué cambió", "texto": item["resumen"]},
+            {"label": "qué cambió", "texto": _limpiar_y_truncar_resumen(item["resumen"])},
             {"label": "por qué importa",
              "texto": "Una novedad para tener en el radar si trabajás con esta herramienta."},
         ],

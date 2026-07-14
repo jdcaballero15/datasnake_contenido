@@ -70,3 +70,38 @@ def test_ideas_desde_item_novedad_usa_el_resumen():
 
     assert idea["secciones"][0] == {"label": "qué cambió", "texto": "Genera DAX en lenguaje natural."}
     assert idea["secciones"][1] == {"label": "por qué importa", "texto": "Una novedad para tener en el radar si trabajás con esta herramienta."}
+
+
+def test_ideas_desde_item_novedad_limpia_el_html_del_resumen():
+    """feedparser deja el HTML crudo del feed en entry.summary (ver
+    fuentes/feeds.py). Con autoescape, esos tags se ven literalmente en la
+    placa ("<p>Today we are announcing...</p>"): hay que limpiarlos."""
+    item = {"titulo": "T", "resumen": "<p>Today we are <b>announcing</b> Copilot in DAX.</p>",
+            "fuente": "F", "link": "http://x/1", "id": "http://x/1"}
+
+    idea = contenido.ideas_desde_item("novedad", item)[0]
+
+    texto = idea["secciones"][0]["texto"]
+    assert "<" not in texto and ">" not in texto
+    assert "Today we are announcing Copilot in DAX." in texto
+
+
+def test_ideas_desde_item_novedad_trunca_resumen_largo_en_limite_de_palabra():
+    """Los feeds mandan resúmenes largos (~1.100 caracteres es común): sin
+    truncar, el panel se pasa del alto de la placa (.plate tiene
+    overflow:hidden) y se come el footer. Truncar en medio de una palabra
+    también se ve mal, así que el corte tiene que respetar el límite de
+    palabra y cerrar con elipsis."""
+    resumen_largo = "palabra " * 200  # ~1600 caracteres, bien por encima del máximo
+    item = {"titulo": "T", "resumen": resumen_largo, "fuente": "F",
+            "link": "http://x/1", "id": "http://x/1"}
+
+    idea = contenido.ideas_desde_item("novedad", item)[0]
+
+    texto = idea["secciones"][0]["texto"]
+    assert len(texto) <= contenido.MAX_CHARS_SECCION_TEXTO
+    assert texto.endswith("…")
+    # el corte no puede caer a mitad de palabra: sin el "…" final, lo que
+    # queda tiene que ser una secuencia de palabras completas de "palabra "
+    cuerpo = texto[:-1].strip()
+    assert cuerpo != "" and all(p == "palabra" for p in cuerpo.split())

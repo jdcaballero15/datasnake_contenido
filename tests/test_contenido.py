@@ -71,6 +71,7 @@ def test_ideas_desde_item_tip_tiene_las_tres_secciones_con_codigo():
     idea = contenido.ideas_desde_item("tip", item)[0]
 
     assert idea["titulo"] == "Top N en SQL"
+    assert idea["deck"] == ""
     assert [s["label"] for s in idea["secciones"]] == ["el problema", "el código", "por qué funciona"]
     assert idea["secciones"][1] == {"label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
 
@@ -82,3 +83,4 @@ def test_ideas_desde_item_novedad_usa_el_resumen():
     idea = contenido.ideas_desde_item("novedad", item)[0]
 
     assert idea["secciones"][0] == {"label": "qué cambió", "texto": "Genera DAX en lenguaje natural."}
+    assert idea["secciones"][1] == {"label": "por qué importa", "texto": "Una novedad para tener en el radar si trabajás con esta herramienta."}

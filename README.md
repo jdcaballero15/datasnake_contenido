@@ -6,9 +6,12 @@ Fábrica de contenido semanal a **presupuesto $0** para [@data.snake](https://in
 Cada domingo, GitHub Actions genera un lote de 3 piezas (1 novedad de RSS + 2 evergreen),
 las redacta con Gemini (voz propia de la marca, con plan B local si Gemini falla), las
 renderiza como carruseles PNG 1080×1350 con portada verde de marca, placas de contenido
-oscuras con una variante clara cada 3ª placa, arma un reel 9:16 opcional por
-pieza, y deja todo en Google Drive listo para subir **a mano**. No hay autopublicación
-(sin Meta API): el dueño de la cuenta elige el audio en tendencia y postea manualmente.
+oscuras con una variante clara cada 3ª placa, y deja todo en Google Drive listo para
+subir **a mano** desde el teléfono. No hay autopublicación (sin Meta API): el dueño de
+la cuenta abre Drive en el celular y postea manualmente.
+
+Solo carruseles: el reel de slideshow está apagado (`REEL_ACTIVADO = False` en
+`src/config.py`). El código sigue ahí por si algún día se prende.
 
 Detalle completo de la arquitectura, el flujo y cómo tocar cada parámetro:
 ver **[`MANUAL-TECNICO.md`](MANUAL-TECNICO.md)**.

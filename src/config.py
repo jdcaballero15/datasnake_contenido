@@ -33,7 +33,9 @@ CTA_GUARDAR = "🔖 Guardalo para tu próximo proyecto."
 
 HASHTAGS_DEFAULT = ["data", "analytics", "powerbi", "sql", "python"]
 
-# Reels de slideshow (opcional): segundos por placa.
+# Reels de slideshow: apagados. La cuenta publica solo carruseles; el código
+# queda para cuando haga falta. Poner True acá (y ffmpeg en el workflow) lo revive.
+REEL_ACTIVADO = False
 SEGUNDOS_POR_SLIDE = 3
 
 
@@ -48,6 +50,7 @@ class Config:
     ig_handle: str = "data.snake"
     mix: dict = field(default_factory=lambda: {"novedad": MIX_NOVEDAD, "evergreen": 2})
     tipos_evergreen: list = field(default_factory=lambda: list(TIPOS_EVERGREEN))
+    reel_activado: bool = REEL_ACTIVADO
     segundos_por_slide: int = SEGUNDOS_POR_SLIDE
     pausa_entre_llamadas: float = 7.0  # anti rate-limit del free tier de Gemini
 

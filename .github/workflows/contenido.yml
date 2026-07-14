@@ -36,7 +36,24 @@ jobs:
 
       - run: pip install -r requirements.txt
       - run: python -m playwright install --with-deps chromium
-      - run: sudo apt-get update && sudo apt-get install -y rclone ffmpeg
+      - run: sudo apt-get update && sudo apt-get install -y rclone
+
+      # Sin secrets el lote sale con textos de respaldo y no llega a Drive, pero la
+      # corrida terminaba en verde y nadie se enteraba. Cortamos acá y bien fuerte.
+      - name: Chequear secrets
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+          GDRIVE_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          faltan=""
+          for s in GEMINI_API_KEY GDRIVE_TOKEN GDRIVE_FOLDER_ID; do
+            [ -n "${!s}" ] || faltan="$faltan $s"
+          done
+          if [ -n "$faltan" ]; then
+            echo "::error::Faltan secrets:$faltan — cargalos en Settings → Secrets → Actions (ver MANUAL-TECNICO.md)"
+            exit 1
+          fi
 
       - name: Generar lote
         env:
@@ -54,9 +71,9 @@ jobs:
           # o espacios delante del JSON; rclone entonces no puede parsear el token
           # y no sube nada. Recortamos todo lo que haya antes del primer '{'.
           export RCLONE_CONFIG_GDRIVE_TOKEN="{${RCLONE_CONFIG_GDRIVE_TOKEN#*\{}"
-          rclone copy salida/ gdrive: --exclude "**/00-CAPTIONS.txt" || echo "Drive falló"
+          rclone copy salida/ gdrive: --exclude "**/00-CAPTIONS.txt"
           rclone copy salida/ gdrive: --include "**/00-CAPTIONS.txt" \
-            --drive-import-formats txt --drive-export-formats txt || true
+            --drive-import-formats txt --drive-export-formats txt
 
       - name: Guardar lote como artifact (respaldo)
         if: always()

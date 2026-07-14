@@ -13,15 +13,18 @@ Cada domingo a las 08:00 ARG, un workflow de GitHub Actions:
 2. Las redacta con **Gemini** (free tier) en la voz de marca de Data Snake; si Gemini falla
    dos intentos, cae a un **plan B local** (texto armado a mano desde el propio item, sin IA).
 3. Renderiza cada pieza como **carrusel PNG 1080×1350** (Playwright + Chromium sobre
-   plantillas Jinja2, tema oscuro de marca) y arma un **reel 9:16 opcional** por pieza
-   (ffmpeg: placas + música, sin animación).
+   plantillas Jinja2, tema oscuro de marca). **Solo carruseles**: el reel de slideshow
+   está apagado (`REEL_ACTIVADO = False`), ver §VIDEO.
 4. Exporta todo a una carpeta plana `ParaSubir/` con `00-CAPTIONS.txt`, y sube el lote
    entero a **Google Drive** con `rclone`.
 5. Commitea el estado (`estado/*.json`) para no repetir contenido la próxima semana.
 
 **Publicación 100% manual**: no hay autopublicación ni API de Meta. El dueño de
-`@data.snake` abre Drive, elige audio en tendencia y sube a mano a Reels/TikTok/Shorts.
+`@data.snake` abre la carpeta en la app de Drive del teléfono y sube el carrusel a mano.
 No existe un workflow "publicar" — solo este, de generación + entrega.
+
+**Si falta un secret, la corrida falla a propósito** (paso *Chequear secrets*): antes
+seguía en verde con textos de plan B y sin subir nada a Drive, y nadie se enteraba.
 
 ## 2. Flujo de generación
 
@@ -53,10 +56,16 @@ RENDER      src/render/renderer.py  → Renderer, un solo Chromium por lote;
                                       paleta y el logo.
 
 VIDEO       src/video/reel_slideshow.py → generar_reel(carpeta, cfg, seed):
-                                      encadena las placas PNG con ffmpeg + música
-                                      (src/audio/musica.py); opcional — si falta
-                                      ffmpeg o no hay placas, la pieza sale sin
-                                      reel y la corrida no se cae.
+                                      APAGADO (cfg.reel_activado = False): devuelve
+                                      None sin hacer nada. Para revivirlo: poner
+                                      REEL_ACTIVADO = True en src/config.py y volver
+                                      a instalar ffmpeg en el workflow (el comando
+                                      de ffmpeg estaba fallando con exit 254: hay
+                                      que depurarlo antes de confiar en él).
+                                      Encadena las placas PNG con ffmpeg + música
+                                      (src/audio/musica.py); si falta ffmpeg o no
+                                      hay placas, la pieza sale sin reel y la
+                                      corrida no se cae.
 
 EXPORT      src/exportar.py         → exportar(): aplana el lote a
                                       salida/ParaSubir/semana-<fecha>/ con toda
@@ -155,7 +164,7 @@ primera corrida hay que lanzarla a mano (Actions → *Generar contenido Data Sna
 | Contenido evergreen (comparativas, roles, tips) | `datos/comparativas.json`, `datos/roles.json`, `datos/tips.json` (agregar entradas con `id` nuevo) |
 | Diseño visual de las placas | `plantillas/*.html` (`portada`, `contenido`, `cierre`, `_estilos`) |
 | Labels de las secciones de cada placa | `src/contenido.py` → `SECCIONES_POR_TIPO` |
-| Duración de cada placa en el reel | `src/config.py` → `SEGUNDOS_POR_SLIDE` |
+| Prender/apagar el reel (hoy apagado) y duración de cada placa | `src/config.py` → `REEL_ACTIVADO`, `SEGUNDOS_POR_SLIDE` |
 | Pausa entre llamadas a Gemini (anti rate-limit) | `src/config.py` → `Config.pausa_entre_llamadas` |
 
 ## 8. Tests
@@ -165,9 +174,9 @@ pytest
 ```
 
 Cubre config, bancos, feeds, prompts/contratos, render, reel (slideshow), exportar y el
-orquestador (`main`, con `--dry-run` incluido). Si `ffmpeg` no está instalado en el
-entorno, el test de reel se saltea (`skip`) en vez de fallar — el sistema en sí también
-degrada igual en producción (pieza sin reel, corrida no se cae).
+orquestador (`main`, con `--dry-run` incluido). El test que arma un mp4 de verdad se
+saltea (`skip`) si `ffmpeg` no está instalado; el resto verifica que con el reel apagado
+no se genere ningún video.
 
 ---
 Última actualización: 2026-07-14.

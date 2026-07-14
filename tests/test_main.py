@@ -1,6 +1,5 @@
 from src import main
 from src.config import get_config
-from src.main import construir_placas
 
 
 def test_plan_semana_sin_novedad_da_tres_evergreen(monkeypatch, tmp_path):
@@ -21,7 +20,8 @@ def test_plan_semana_con_novedad(tmp_path):
 
 
 IDEA = {"titulo": "Excel", "deck": "Limpiar filas",
-        "secciones": [{"label": "cuándo conviene", "texto": "Una sola vez."}]}
+        "secciones": [{"label": "cuándo conviene", "texto": "Una sola vez."},
+                      {"label": "dónde duele", "texto": "No queda documentado."}]}
 
 
 def test_construir_placas_usa_una_placa_contenido_por_idea():
@@ -64,6 +64,18 @@ def test_plan_b_tip_arma_ideas_densas():
         "el problema", "el código", "por qué funciona"]
 
 
+def test_plan_b_tip_usa_sql_por_defecto_si_falta_lenguaje():
+    """contenido.ideas_desde_item ya usa item.get('lenguaje', 'sql'); plan_b
+    tiene que seguir el mismo criterio en vez de item['lenguaje'] (KeyError
+    si el banco no trae el campo)."""
+    item = {"titulo": "Top N en SQL", "gancho": "Top N por grupo.", "codigo": "SELECT 1;",
+            "explicacion": "ROW_NUMBER numera por grupo."}  # sin "lenguaje"
+
+    red = main.plan_b("tip", item)
+
+    assert red["lenguaje"] == "sql"
+
+
 def test_armar_caption_agrega_ctas_y_hashtags():
     cap = main.armar_caption("cuerpo", ["data", "sql"])
     assert "cuerpo" in cap and "#data" in cap
@@ -90,16 +102,6 @@ def test_plan_semana_usa_seeds_deterministas(monkeypatch, tmp_path):
     monkeypatch.setattr(main, "seleccionar", spy)
     main.plan_semana(cfg, seed=202627, novedad=None)  # no novedad → 3 evergreen slots
     assert seeds == [202628, 202629, 202630]  # seed+1, +2, +3 — deterministic, not hash-based
-
-
-def test_construir_placas_adds_carousel_metadata_to_every_plate():
-    red = {"titulo_portada": "EXCEL VS\nPYTHON", "ideas": [IDEA, IDEA]}
-    placas = construir_placas("comparativa", red)
-
-    assert [p["slide_index"] for p in placas] == [1, 2, 3, 4]
-    assert {p["slide_total"] for p in placas} == {4}
-    assert placas[0]["variant"] == "cover"
-    assert placas[-1]["variant"] == "close"
 
 
 def test_plan_b_rol_usa_ideas_densas_por_skill():

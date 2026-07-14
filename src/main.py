@@ -77,7 +77,7 @@ def plan_b(tipo: str, item: dict) -> dict:
               "Guardá el snippet y adaptalo a tus tablas. Pequeños trucos así "
               "te ahorran horas en el día a día con datos.")
     return {**base, "titulo_portada": item["titulo"][:60].upper(),
-            "codigo": item["codigo"], "lenguaje": item["lenguaje"], "caption": cuerpo}
+            "codigo": item["codigo"], "lenguaje": item.get("lenguaje", "sql"), "caption": cuerpo}
 
 
 def redactar_pieza(tipo: str, item: dict, cfg: Config) -> dict:

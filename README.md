@@ -5,7 +5,8 @@ Fábrica de contenido semanal a **presupuesto $0** para [@data.snake](https://in
 
 Cada domingo, GitHub Actions genera un lote de 3 piezas (1 novedad de RSS + 2 evergreen),
 las redacta con Gemini (voz propia de la marca, con plan B local si Gemini falla), las
-renderiza como carruseles PNG 1080×1350 con tema oscuro, arma un reel 9:16 opcional por
+renderiza como carruseles PNG 1080×1350 con portada verde de marca, placas de contenido
+oscuras con una variante clara cada 3ª placa, arma un reel 9:16 opcional por
 pieza, y deja todo en Google Drive listo para subir **a mano**. No hay autopublicación
 (sin Meta API): el dueño de la cuenta elige el audio en tendencia y postea manualmente.
 

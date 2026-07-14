@@ -85,39 +85,45 @@ def inyectar_codigo_tip(datos: dict) -> None:
                             "lenguaje": datos.get("lenguaje", "sql")})
 
 
+def _con_labels(tipo: str, *textos: str) -> list[dict]:
+    """Empareja <textos> con los labels de secciones que le tocan a <tipo>, en
+    el orden del contrato. Usa secciones_que_redacta_gemini (no
+    SECCIONES_POR_TIPO directo) porque en "tip" el label "el código" no viaja
+    como texto: esa sección la arma aparte inyectar_codigo_tip, así que acá
+    hay que alinear solo contra los labels que SÍ llevan "texto"."""
+    labels = secciones_que_redacta_gemini(tipo)
+    return [{"label": label, "texto": texto} for label, texto in zip(labels, textos)]
+
+
 def ideas_desde_item(tipo: str, item: dict) -> list[dict]:
     """Ideas densas armadas SOLO con el material del banco/feed, sin IA (plan B).
 
     La unidad de idea depende del tipo: una opción (comparativa), una skill (rol),
-    el tip entero (tip), el cambio (novedad)."""
+    el tip entero (tip), el cambio (novedad).
+
+    Los labels salen de SECCIONES_POR_TIPO (vía _con_labels), nunca como
+    strings literales acá: como este camino no pasa por contratos.validar,
+    hardcodear los labels desincronizaría en silencio las placas del plan B
+    si alguien renombra un label en la constante."""
     if tipo == "comparativa":
         return [{
             "titulo": o["nombre"],
             "deck": item["tarea"],
-            "secciones": [
-                {"label": "cuándo conviene", "texto": o["cuando_conviene"]},
-                {"label": "dónde duele", "texto": o["donde_duele"]},
-            ],
+            "secciones": _con_labels(tipo, o["cuando_conviene"], o["donde_duele"]),
         } for o in item["opciones"]]
 
     if tipo == "rol":
         return [{
             "titulo": s["nombre"],
             "deck": item["gancho"],
-            "secciones": [
-                {"label": "por qué te la piden", "texto": s["por_que"]},
-                {"label": "cómo la practicás", "texto": s["como_practicar"]},
-            ],
+            "secciones": _con_labels(tipo, s["por_que"], s["como_practicar"]),
         } for s in item["skills"]]
 
     if tipo == "tip":
         idea = {
             "titulo": item["titulo"],
             "deck": "",
-            "secciones": [
-                {"label": "el problema", "texto": item["gancho"]},
-                {"label": "por qué funciona", "texto": item["explicacion"]},
-            ],
+            "secciones": _con_labels(tipo, item["gancho"], item["explicacion"]),
         }
         inyectar_codigo_tip({"ideas": [idea], "codigo": item["codigo"],
                               "lenguaje": item.get("lenguaje", "sql")})
@@ -126,9 +132,8 @@ def ideas_desde_item(tipo: str, item: dict) -> list[dict]:
     return [{
         "titulo": item["titulo"],
         "deck": item.get("fuente", ""),
-        "secciones": [
-            {"label": "qué cambió", "texto": _limpiar_y_truncar_resumen(item["resumen"])},
-            {"label": "por qué importa",
-             "texto": "Una novedad para tener en el radar si trabajás con esta herramienta."},
-        ],
+        "secciones": _con_labels(
+            tipo,
+            _limpiar_y_truncar_resumen(item["resumen"]),
+            "Una novedad para tener en el radar si trabajás con esta herramienta."),
     }]

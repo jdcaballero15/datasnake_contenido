@@ -104,6 +104,32 @@ def test_validar_acepta_rol():
     validar("rol", _red(ideas=[_IDEA_ROL]))  # no levanta
 
 
+def test_validar_rechaza_texto_de_seccion_muy_largo():
+    """Si Gemini se va de largo en una sección, la placa desborda (.plate
+    tiene overflow:hidden). validar() tiene que topear el largo en vez de
+    validar OK una respuesta que después se corta silenciosamente."""
+    idea = {"titulo": "Excel", "deck": "x", "secciones": [
+        {"label": "cuándo conviene", "texto": "x" * (contratos.MAX_CHARS_SECCION_TEXTO + 1)},
+        {"label": "dónde duele", "texto": "corto"},
+    ]}
+    with pytest.raises(ValueError, match="texto"):
+        validar("comparativa", _red(ideas=[idea]))
+
+
+def test_validar_rechaza_titulo_de_idea_muy_largo():
+    idea = {"titulo": "x" * (contratos.MAX_CHARS_TITULO_IDEA + 1), "deck": "x",
+            "secciones": _IDEA_OK["secciones"]}
+    with pytest.raises(ValueError, match="titulo"):
+        validar("comparativa", _red(ideas=[idea]))
+
+
+def test_validar_rechaza_deck_muy_largo():
+    idea = {"titulo": "Excel", "deck": "x" * (contratos.MAX_CHARS_DECK + 1),
+            "secciones": _IDEA_OK["secciones"]}
+    with pytest.raises(ValueError, match="deck"):
+        validar("comparativa", _red(ideas=[idea]))
+
+
 def test_validar_rechaza_secciones_como_lista_de_strings():
     """Si Gemini devuelve 'secciones' como lista de strings en vez de objetos
     {label, texto}, validar() tiene que levantar ValueError (no AttributeError:

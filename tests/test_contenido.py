@@ -62,6 +62,27 @@ def test_inyectar_codigo_tip_inserta_en_la_posicion_del_contrato():
     assert secciones[pos] == {"label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
 
 
+def test_ideas_desde_item_labels_coinciden_con_secciones_por_tipo():
+    """El plan B (ideas_desde_item) no pasa por contratos.validar, así que si
+    hardcodea los labels como strings literales en vez de derivarlos de
+    SECCIONES_POR_TIPO, renombrar un label en la constante desincroniza las
+    placas del plan B en silencio. Esto cruza las dos fuentes para cada tipo."""
+    items = {
+        "novedad": {"titulo": "T", "resumen": "R", "fuente": "F", "id": "x"},
+        "comparativa": {"tarea": "T", "veredicto": "V", "opciones": [
+            {"nombre": "Excel", "cuando_conviene": "c", "donde_duele": "d"}]},
+        "rol": {"rol": "R", "gancho": "g", "herramientas": ["SQL"],
+                "skills": [{"nombre": "SQL", "por_que": "x", "como_practicar": "y"}]},
+        "tip": {"titulo": "T", "gancho": "g", "codigo": "SELECT 1;", "lenguaje": "sql",
+                "explicacion": "e"},
+    }
+    for tipo, item in items.items():
+        ideas = contenido.ideas_desde_item(tipo, item)
+        for idea in ideas:
+            labels = [s["label"] for s in idea["secciones"]]
+            assert labels == contenido.SECCIONES_POR_TIPO[tipo], tipo
+
+
 def test_ideas_desde_item_novedad_usa_el_resumen():
     item = {"titulo": "Power BI suma Copilot", "resumen": "Genera DAX en lenguaje natural.",
             "fuente": "Power BI Blog", "link": "http://x/1", "id": "http://x/1"}

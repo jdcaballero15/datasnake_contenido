@@ -3,12 +3,20 @@
 Si no valida, main.py reintenta una vez y si no, cae a plan B.
 """
 
-from src.contenido import secciones_que_redacta_gemini
+from src.contenido import MAX_CHARS_SECCION_TEXTO, secciones_que_redacta_gemini
 
 MIN_CHARS_CAPTION = 400
 MAX_CHARS_PORTADA = 60
 MAX_HASHTAGS = 5
 RANGO_IDEAS = (1, 6)
+
+# El prompt pide "titulo" de 1-3 palabras (entra gigante, Anton 94px) y "deck"
+# de una oración (Archivo 38px, max-width 900px). El peor caso real de los
+# bancos hoy es 54 chars de titulo y 76 de deck (ver datos/*.json); estos
+# topes dejan margen sin permitir que Gemini se vaya tan de largo que la
+# placa desborde (.plate tiene overflow:hidden: lo que se pasa se corta).
+MAX_CHARS_TITULO_IDEA = 80
+MAX_CHARS_DECK = 120
 
 _CAMPOS = {
     "novedad": ("titulo_portada", "ideas", "caption", "hashtags"),
@@ -62,5 +70,17 @@ def validar(tipo: str, datos: dict) -> None:
                 raise ValueError(
                     f"{tipo}: idea {i} tiene una sección vacía o con 'texto' inválido "
                     f"({texto!r})")
+            if len(texto) > MAX_CHARS_SECCION_TEXTO:
+                raise ValueError(
+                    f"{tipo}: idea {i} tiene 'texto' de sección '{seccion.get('label')}' "
+                    f"muy largo ({len(texto)} > {MAX_CHARS_SECCION_TEXTO} chars, se corta "
+                    "en la placa)")
+        titulo_idea = idea.get("titulo", "")
+        if not isinstance(titulo_idea, str) or len(titulo_idea) > MAX_CHARS_TITULO_IDEA:
+            raise ValueError(
+                f"{tipo}: idea {i} tiene 'titulo' inválido o muy largo ({titulo_idea!r})")
+        deck = idea.get("deck", "")
+        if not isinstance(deck, str) or len(deck) > MAX_CHARS_DECK:
+            raise ValueError(f"{tipo}: idea {i} tiene 'deck' inválido o muy largo ({deck!r})")
     if tipo == "tip" and not datos["codigo"].strip():
         raise ValueError("tip: codigo vacío")

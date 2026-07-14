@@ -64,9 +64,9 @@ def plan_b(tipo: str, item: dict) -> dict:
                 "ideas": [{"titulo": "Qué salió", "texto": item["resumen"][:200]}],
                 "caption": cuerpo}
     if tipo == "comparativa":
-        ideas = [{"titulo": f"Opción {i+1}", "texto": o} for i, o in enumerate(item["opciones"])]
-        cuerpo = (f"{item['tarea']}: no hay una sola respuesta.\n\n" +
-                  " ".join(item["opciones"]) + f"\n\n{item['veredicto']}")
+        ideas = [{"titulo": f"Opción {i+1}", "texto": o["nombre"]} for i, o in enumerate(item["opciones"])]
+        opciones = " ".join(f"{o['nombre']}: {o['cuando_conviene']}" for o in item["opciones"])
+        cuerpo = f"{item['tarea']}: no hay una sola respuesta.\n\n{opciones}\n\n{item['veredicto']}"
         return {**base, "titulo_portada": item["tarea"][:60].upper(), "ideas": ideas, "caption": cuerpo}
     if tipo == "rol":
         nombres_skills = [s["nombre"] for s in item["skills"]]

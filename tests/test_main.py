@@ -98,3 +98,26 @@ def test_construir_placas_uses_code_variant_for_tip_snippet():
     assert [p["plantilla"] for p in placas] == ["portada", "idea", "codigo", "cierre"]
     assert [p["variant"] for p in placas] == ["cover", "dark", "code", "close"]
     assert placas[2]["module_label"] == "qué resuelve"
+
+
+def test_plan_b_comparativa_con_opciones_objeto():
+    """Test que reproduzca el error: opciones son dicts, no strings."""
+    item = {
+        "id": "c01",
+        "tarea": "Limpiar 10.000 filas con nulos y duplicados",
+        "opciones": [
+            {"nombre": "Excel",
+             "cuando_conviene": "Es una limpieza de una sola vez y querés verla con los ojos: filtros, quitar duplicados y listo.",
+             "donde_duele": "Son ~8 pasos manuales que nadie deja documentados: la semana que viene los repetís de memoria y no sabés si te dio distinto."},
+            {"nombre": "Python / pandas",
+             "cuando_conviene": "La limpieza se repite: dropna y drop_duplicates son 3 líneas que corrés igual todos los meses.",
+             "donde_duele": "Necesitás el entorno armado y que alguien más pueda correrlo; para un archivo suelto es matar una mosca a cañonazos."},
+        ],
+        "veredicto": "Para algo puntual, Excel; para algo repetible, pandas o SQL.",
+    }
+    red = main.plan_b("comparativa", item)
+    # Verifica que el caption menciona el nombre de una de las opciones
+    assert "Excel" in red["caption"]
+    assert "Python / pandas" in red["caption"]
+    # Verifica que no hay representación dict en el caption
+    assert "{'nombre'" not in red["caption"]

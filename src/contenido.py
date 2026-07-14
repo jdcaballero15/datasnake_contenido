@@ -21,6 +21,35 @@ KICKER_POR_TIPO: dict[str, str] = {
 }
 
 
+def secciones_que_redacta_gemini(tipo: str) -> list[str]:
+    """Los labels que Gemini debe devolver para <tipo>, en el orden esperado.
+
+    Coincide con SECCIONES_POR_TIPO salvo para "tip": ahí Gemini no escribe
+    "el código" como sección (viaja aparte en los campos "codigo"/"lenguaje";
+    ver inyectar_codigo_tip), así que ese label no forma parte de lo que se le
+    exige a la respuesta del modelo."""
+    labels = SECCIONES_POR_TIPO[tipo]
+    if tipo == "tip":
+        pos = labels.index("el código")
+        return labels[:pos] + labels[pos + 1:]
+    return labels
+
+
+def inyectar_codigo_tip(datos: dict) -> None:
+    """Arma la sección "el código" de la (única) idea de un tip y la inserta
+    en la posición que fija SECCIONES_POR_TIPO, a partir de los campos
+    "codigo"/"lenguaje" de datos.
+
+    Gemini no escribe esta sección como texto (ver prompt_tip / secciones_que_
+    redacta_gemini): el snippet viaja aparte. Esta función es la única fuente
+    de esa lógica — la usan tanto la respuesta de Gemini (vía main.redactar_
+    pieza) como el plan B (ideas_desde_item, más abajo)."""
+    secciones = datos["ideas"][0]["secciones"]
+    pos = SECCIONES_POR_TIPO["tip"].index("el código")
+    secciones.insert(pos, {"label": "el código", "codigo": datos["codigo"],
+                            "lenguaje": datos.get("lenguaje", "sql")})
+
+
 def ideas_desde_item(tipo: str, item: dict) -> list[dict]:
     """Ideas densas armadas SOLO con el material del banco/feed, sin IA (plan B).
 
@@ -47,16 +76,17 @@ def ideas_desde_item(tipo: str, item: dict) -> list[dict]:
         } for s in item["skills"]]
 
     if tipo == "tip":
-        return [{
+        idea = {
             "titulo": item["titulo"],
             "deck": "",
             "secciones": [
                 {"label": "el problema", "texto": item["gancho"]},
-                {"label": "el código", "codigo": item["codigo"],
-                 "lenguaje": item.get("lenguaje", "sql")},
                 {"label": "por qué funciona", "texto": item["explicacion"]},
             ],
-        }]
+        }
+        inyectar_codigo_tip({"ideas": [idea], "codigo": item["codigo"],
+                              "lenguaje": item.get("lenguaje", "sql")})
+        return [idea]
 
     return [{
         "titulo": item["titulo"],

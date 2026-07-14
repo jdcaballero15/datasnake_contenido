@@ -3,7 +3,7 @@
 Si no valida, main.py reintenta una vez y si no, cae a plan B.
 """
 
-from src.contenido import SECCIONES_POR_TIPO
+from src.contenido import secciones_que_redacta_gemini
 
 MIN_CHARS_CAPTION = 400
 MAX_CHARS_PORTADA = 60
@@ -28,17 +28,22 @@ def validar(tipo: str, datos: dict) -> None:
         raise ValueError(f"{tipo}: titulo_portada largo")
     if len(datos["hashtags"]) > MAX_HASHTAGS:
         raise ValueError(f"{tipo}: demasiados hashtags")
-    lo, hi = RANGO_IDEAS
-    if not (lo <= len(datos["ideas"]) <= hi):
-        raise ValueError(f"{tipo}: {len(datos['ideas'])} ideas fuera de rango")
+    if tipo == "tip":
+        if len(datos["ideas"]) != 1:
+            raise ValueError(
+                f"tip: debe traer exactamente 1 idea (trajo {len(datos['ideas'])})")
+    else:
+        lo, hi = RANGO_IDEAS
+        if not (lo <= len(datos["ideas"]) <= hi):
+            raise ValueError(f"{tipo}: {len(datos['ideas'])} ideas fuera de rango")
+    esperadas = secciones_que_redacta_gemini(tipo)
     for i, idea in enumerate(datos["ideas"], start=1):
-        if not idea.get("secciones"):
-            raise ValueError(f"{tipo}: idea {i} sin secciones")
-        permitidos = SECCIONES_POR_TIPO[tipo]
-        for seccion in idea["secciones"]:
-            if seccion.get("label") not in permitidos:
-                raise ValueError(
-                    f"{tipo}: idea {i} usa un label fuera del contrato: {seccion.get('label')!r}")
+        labels = [seccion.get("label") for seccion in idea.get("secciones", [])]
+        if labels != esperadas:
+            raise ValueError(
+                f"{tipo}: idea {i} tiene secciones {labels!r}, se esperaba "
+                f"exactamente {esperadas!r} en ese orden (revisá labels y orden)")
+        for seccion in idea.get("secciones", []):
             if not seccion.get("texto", "").strip():
                 raise ValueError(f"{tipo}: idea {i} tiene una sección vacía")
     if tipo == "tip" and not datos["codigo"].strip():

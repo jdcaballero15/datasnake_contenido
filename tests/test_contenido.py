@@ -46,6 +46,22 @@ def test_ideas_desde_item_tip_tiene_las_tres_secciones_con_codigo():
     assert idea["secciones"][1] == {"label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
 
 
+def test_inyectar_codigo_tip_inserta_en_la_posicion_del_contrato():
+    """La sección "el código" la arma el sistema (Gemini no la escribe), y su
+    posición tiene que salir de SECCIONES_POR_TIPO, no de un índice hardcodeado."""
+    datos = {"ideas": [{"titulo": "t", "deck": "d", "secciones": [
+        {"label": "el problema", "texto": "Sacar el top 3 por categoría."},
+        {"label": "por qué funciona", "texto": "ROW_NUMBER numera por grupo."},
+    ]}], "codigo": "SELECT 1;", "lenguaje": "sql"}
+
+    contenido.inyectar_codigo_tip(datos)
+
+    secciones = datos["ideas"][0]["secciones"]
+    assert [s["label"] for s in secciones] == contenido.SECCIONES_POR_TIPO["tip"]
+    pos = contenido.SECCIONES_POR_TIPO["tip"].index("el código")
+    assert secciones[pos] == {"label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
+
+
 def test_ideas_desde_item_novedad_usa_el_resumen():
     item = {"titulo": "Power BI suma Copilot", "resumen": "Genera DAX en lenguaje natural.",
             "fuente": "Power BI Blog", "link": "http://x/1", "id": "http://x/1"}

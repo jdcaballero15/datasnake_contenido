@@ -12,9 +12,9 @@ import sys
 import time
 from datetime import date
 
-from src import exportar
-from src.config import (CTA_COMPARTIR, CTA_GUARDAR, HASHTAGS_DEFAULT, Config,
-                        get_config)
+from src import contenido, exportar
+from src.config import (CTA_COMPARTIR, CTA_GUARDAR, ESLOGAN, HASHTAGS_DEFAULT,
+                        Config, get_config)
 from src.fuentes import feeds
 from src.fuentes.bancos import registrar_usados, seleccionar
 from src.redaccion import prompts
@@ -54,35 +54,30 @@ def plan_semana(cfg: Config, seed: int, novedad: dict | None) -> list[dict]:
 
 
 def plan_b(tipo: str, item: dict) -> dict:
-    """Redacción local sin IA: caption decente a partir del propio item."""
-    base = {"hashtags": list(HASHTAGS_DEFAULT), "plan_b": True}
+    """Redacción local sin IA: caption decente + ideas densas desde el propio item."""
+    ideas = contenido.ideas_desde_item(tipo, item)
+    base = {"hashtags": list(HASHTAGS_DEFAULT), "plan_b": True, "ideas": ideas}
     if tipo == "novedad":
         cuerpo = (f"{item['titulo']}.\n\n{item['resumen']}\n\n"
                   "Una novedad para tener en el radar si trabajás con esta herramienta. "
                   "Probala en tu próximo proyecto y fijate qué te ahorra.")
-        return {**base, "titulo_portada": item["titulo"][:60].upper(),
-                "ideas": [{"titulo": "Qué salió", "texto": item["resumen"][:200]}],
-                "caption": cuerpo}
+        return {**base, "titulo_portada": item["titulo"][:60].upper(), "caption": cuerpo}
     if tipo == "comparativa":
-        ideas = [{"titulo": f"Opción {i+1}", "texto": o} for i, o in enumerate(item["opciones"])]
-        cuerpo = (f"{item['tarea']}: no hay una sola respuesta.\n\n" +
-                  " ".join(item["opciones"]) + f"\n\n{item['veredicto']}")
-        return {**base, "titulo_portada": item["tarea"][:60].upper(), "ideas": ideas, "caption": cuerpo}
+        opciones = " ".join(f"{o['nombre']}: {o['cuando_conviene']}" for o in item["opciones"])
+        cuerpo = f"{item['tarea']}: no hay una sola respuesta.\n\n{opciones}\n\n{item['veredicto']}"
+        return {**base, "titulo_portada": item["tarea"][:60].upper(), "caption": cuerpo}
     if tipo == "rol":
-        ideas = [{"titulo": "Skills", "texto": ", ".join(item["skills"])},
-                 {"titulo": "Herramientas", "texto": ", ".join(item["herramientas"])}]
+        skills = ", ".join(s["nombre"] for s in item["skills"])
         cuerpo = (f"{item['rol']}: {item['gancho']}\n\n"
-                  f"Skills clave: {', '.join(item['skills'])}.\n\n"
+                  f"Skills clave: {skills}.\n\n"
                   f"Herramientas: {', '.join(item['herramientas'])}. "
                   "Si apuntás a este rol, arrancá por lo que más se repite en las búsquedas.")
-        return {**base, "titulo_portada": item["rol"].upper(), "ideas": ideas, "caption": cuerpo}
-    # tip
+        return {**base, "titulo_portada": item["rol"].upper(), "caption": cuerpo}
     cuerpo = (f"{item['titulo']}.\n\n{item['explicacion']}\n\n"
               "Guardá el snippet y adaptalo a tus tablas. Pequeños trucos así "
               "te ahorran horas en el día a día con datos.")
     return {**base, "titulo_portada": item["titulo"][:60].upper(),
-            "ideas": [{"titulo": "Cómo funciona", "texto": item["explicacion"]}],
-            "codigo": item["codigo"], "lenguaje": item["lenguaje"], "caption": cuerpo}
+            "codigo": item["codigo"], "lenguaje": item.get("lenguaje", "sql"), "caption": cuerpo}
 
 
 def redactar_pieza(tipo: str, item: dict, cfg: Config) -> dict:
@@ -91,6 +86,8 @@ def redactar_pieza(tipo: str, item: dict, cfg: Config) -> dict:
         try:
             datos = generar_json(prompt_de(item), cfg.gemini_api_key)
             validar(tipo, datos)
+            if tipo == "tip":
+                contenido.inyectar_codigo_tip(datos)
             return datos
         except (GeminiError, ValueError, KeyError, TypeError) as e:
             log.warning("Redacción de %s falló (intento %d): %s", tipo, intento + 1, e)
@@ -106,29 +103,25 @@ def armar_caption(cuerpo: str, hashtags: list[str]) -> str:
 def construir_placas(tipo: str, red: dict) -> list[dict]:
     tag = {"novedad": "Novedad", "comparativa": "Comparativa",
            "rol": "Carrera en data", "tip": "Tip"}[tipo]
-    plantilla_idea = "comparativa" if tipo == "comparativa" else "idea"
+    palabra = contenido.KICKER_POR_TIPO[tipo]
+
     placas = [{
         "plantilla": "portada",
         "tag": tag,
         "titulo": red["titulo_portada"],
+        "subtitulo": red.get("subtitulo", ESLOGAN),
         "variant": "cover",
     }]
-    for i, b in enumerate(red["ideas"], start=1):
+    for i, idea in enumerate(red["ideas"], start=1):
         placas.append({
-            "plantilla": plantilla_idea,
-            "numero": i,
-            "titulo": b["titulo"],
-            "texto": b["texto"],
-            "variant": "light" if tipo == "comparativa" and i == len(red["ideas"]) else "dark",
-            "module_label": "cuándo conviene" if tipo == "comparativa" else "qué resuelve",
-        })
-    if tipo == "tip" and red.get("codigo"):
-        placas.append({
-            "plantilla": "codigo",
-            "lenguaje": red.get("lenguaje", "sql"),
-            "codigo": red["codigo"],
-            "variant": "code",
-            "module_label": "qué resuelve",
+            "plantilla": "contenido",
+            "kicker": f"{palabra} {i:02d}",
+            "titulo": idea["titulo"],
+            "deck": idea.get("deck", ""),
+            "secciones": idea["secciones"],
+            # cada 3ª idea sale en placa clara: es el ritmo que evita que el
+            # carrusel se lea como un bloque oscuro uniforme
+            "variant": "light" if i % 3 == 0 else "dark",
         })
     placas.append({"plantilla": "cierre", "variant": "close"})
 
@@ -156,20 +149,63 @@ def armar_pieza(indice, tipo, item, red, cfg, renderer, lote_semana):
 
 
 DRY_RUN = {
-    "novedad": {"titulo_portada": "LO NUEVO\nDE POWER BI",
-                "ideas": [{"titulo": "Copilot", "texto": "Genera medidas DAX en lenguaje natural."}],
-                "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT},
-    "comparativa": {"titulo_portada": "EXCEL VS\nPYTHON",
-                    "ideas": [{"titulo": "Excel", "texto": "Rápido para algo puntual."},
-                              {"titulo": "Python", "texto": "Reproducible para algo repetido."}],
-                    "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT},
-    "rol": {"titulo_portada": "DATA\nANALYST",
-            "ideas": [{"titulo": "Skills", "texto": "SQL, BI, comunicación."}],
-            "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT},
-    "tip": {"titulo_portada": "TOP N\nEN SQL",
-            "ideas": [{"titulo": "Cómo", "texto": "ROW_NUMBER con PARTITION BY."}],
-            "codigo": "SELECT 1;", "lenguaje": "sql",
-            "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT},
+    "novedad": {
+        "titulo_portada": "LO NUEVO\nDE POWER BI",
+        "ideas": [{
+            "titulo": "COPILOT EN DAX",
+            "deck": "Escribís la medida en castellano y te la devuelve en DAX.",
+            "secciones": [
+                {"label": "qué cambió", "texto": "El panel de medidas ahora acepta lenguaje natural: describís el cálculo y Copilot arma la expresión DAX."},
+                {"label": "por qué importa", "texto": "El cuello de botella de un tablero rara vez es el gráfico: es la medida que nadie se acuerda cómo escribir."},
+            ],
+        }],
+        "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT,
+    },
+    "comparativa": {
+        "titulo_portada": "EXCEL VS\nPYTHON",
+        "ideas": [
+            {"titulo": "EXCEL", "deck": "Limpiar 10.000 filas con nulos y duplicados.",
+             "secciones": [
+                 {"label": "cuándo conviene", "texto": "Es una limpieza de una sola vez y querés verla con los ojos."},
+                 {"label": "dónde duele", "texto": "Son ocho pasos manuales que nadie documenta: la semana que viene los repetís de memoria."}]},
+            {"titulo": "PYTHON", "deck": "Limpiar 10.000 filas con nulos y duplicados.",
+             "secciones": [
+                 {"label": "cuándo conviene", "texto": "La limpieza se repite: tres líneas que corrés igual todos los meses."},
+                 {"label": "dónde duele", "texto": "Necesitás el entorno armado y que alguien más pueda correrlo."}]},
+        ],
+        "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT,
+    },
+    "rol": {
+        "titulo_portada": "DATA\nANALYST",
+        "ideas": [
+            {"titulo": "SQL", "deck": "El puente entre los datos crudos y la decisión.",
+             "secciones": [
+                 {"label": "por qué te la piden", "texto": "Es el idioma en el que están los datos: sin SQL dependés de que alguien te pase un export."},
+                 {"label": "cómo la practicás", "texto": "Agarrá una base pública y respondé preguntas de negocio sin exportar a Excel."}]},
+            {"titulo": "POWER BI", "deck": "El puente entre los datos crudos y la decisión.",
+             "secciones": [
+                 {"label": "por qué te la piden", "texto": "Nadie decide mirando una tabla: el dashboard es el formato en el que tu trabajo se consume."},
+                 {"label": "cómo la practicás", "texto": "Rehacé como dashboard un reporte que hoy vive en Excel, con filtros y una medida propia."}]},
+            {"titulo": "COMUNICAR", "deck": "El puente entre los datos crudos y la decisión.",
+             "secciones": [
+                 {"label": "por qué te la piden", "texto": "Un análisis que no se entiende no existe: te miden por la decisión que gatillaste."},
+                 {"label": "cómo la practicás", "texto": "Contá cada análisis en tres frases: qué preguntaste, qué encontraste, qué habría que hacer."}]},
+        ],
+        "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT,
+    },
+    "tip": {
+        "titulo_portada": "TOP N\nEN SQL",
+        "ideas": [{
+            "titulo": "TOP N EN SQL",
+            "deck": "",
+            "secciones": [
+                {"label": "el problema", "texto": "Sacar el top 3 por categoría sin anidar tres subconsultas."},
+                {"label": "el código", "codigo": "SELECT *\nFROM (\n  SELECT *,\n    ROW_NUMBER() OVER (\n      PARTITION BY categoria ORDER BY ventas DESC) AS rn\n  FROM ventas\n) t\nWHERE rn <= 3;", "lenguaje": "sql"},
+                {"label": "por qué funciona", "texto": "ROW_NUMBER numera dentro de cada grupo; filtrás rn <= 3 y tenés el top por categoría en una sola pasada."},
+            ],
+        }],
+        "caption": "c" * 500, "hashtags": HASHTAGS_DEFAULT,
+    },
 }
 
 

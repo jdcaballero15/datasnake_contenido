@@ -16,6 +16,7 @@ COLOR_SURFACE = "#1C2B3A"      # Deep Slate (cards)
 COLOR_TEXTO_SEC = "#7B91A8"    # Mist
 GRAD_A = "#7C5CBF"             # Slate Violet
 GRAD_B = "#2EE6A6"             # verde del logo
+COLOR_HUESO = "#EEE9E1"        # fondo de la placa clara
 
 # Mix semanal: 1 novedad (RSS) + 2 evergreen rotando entre estos tipos.
 MIX_NOVEDAD = 1

@@ -13,8 +13,9 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import sync_playwright
 
-from src.config import (COLOR_ACENTO, COLOR_BORDE, COLOR_FONDO, COLOR_SURFACE,
-                        COLOR_TEXTO, COLOR_TEXTO_SEC, ESLOGAN, GRAD_A, GRAD_B, Config)
+from src.config import (COLOR_ACENTO, COLOR_BORDE, COLOR_FONDO, COLOR_HUESO,
+                        COLOR_SURFACE, COLOR_TEXTO, COLOR_TEXTO_SEC, ESLOGAN,
+                        GRAD_A, GRAD_B, Config)
 
 log = logging.getLogger("sosiego.render")
 
@@ -62,19 +63,18 @@ class Renderer:
             self._pw.stop()
 
     def render_placa(self, contexto: dict, destino: Path) -> Path:
-        """contexto["plantilla"]: portada | idea | codigo | comparativa | cierre."""
+        """contexto["plantilla"]: portada | contenido | cierre."""
         contexto = dict(contexto)
         contexto.setdefault("slide_index", 1)
         contexto.setdefault("slide_total", 1)
         contexto.setdefault("variant", "dark")
-        contexto.setdefault("module_label", "qué resuelve")
         contexto.setdefault("logo_uri", _como_data_uri(self.cfg.ruta_logo))
         contexto.setdefault("ig_handle", self.cfg.ig_handle)
         contexto.setdefault("eslogan", ESLOGAN)
         contexto.setdefault("c", {
             "fondo": COLOR_FONDO, "texto": COLOR_TEXTO, "acento": COLOR_ACENTO,
             "borde": COLOR_BORDE, "surface": COLOR_SURFACE, "texto_sec": COLOR_TEXTO_SEC,
-            "grad_a": GRAD_A, "grad_b": GRAD_B,
+            "grad_a": GRAD_A, "grad_b": GRAD_B, "hueso": COLOR_HUESO,
         })
 
         html = self.env.get_template(f"{contexto['plantilla']}.html").render(**contexto)

@@ -74,18 +74,24 @@ Orquestador de todo el flujo: `src/main.py:main()` (`python -m src.main` /
 
 | Tipo | Fuente | Banco/feed | Plantillas usadas |
 |---|---|---|---|
-| `novedad` | RSS (herramientas del mundo data) | `datos/feeds.json` | `portada`, `idea` × N, `cierre` |
-| `comparativa` | Banco evergreen | `datos/comparativas.json` | `portada`, `comparativa` × N, `cierre` |
-| `rol` | Banco evergreen | `datos/roles.json` | `portada`, `idea` × N, `cierre` |
-| `tip` | Banco evergreen | `datos/tips.json` | `portada`, `idea`, `codigo` (si trae código), `cierre` |
+| `novedad` | RSS (herramientas del mundo data) | `datos/feeds.json` | `portada`, `contenido` × N, `cierre` |
+| `comparativa` | Banco evergreen | `datos/comparativas.json` | `portada`, `contenido` × N, `cierre` |
+| `rol` | Banco evergreen | `datos/roles.json` | `portada`, `contenido` × N, `cierre` |
+| `tip` | Banco evergreen | `datos/tips.json` | `portada`, `contenido` (con el código en una de sus secciones), `cierre` |
 
 Mix semanal: `MIX_NOVEDAD = 1` + 2 evergreen rotando entre `TIPOS_EVERGREEN =
 ["comparativa", "rol", "tip"]` (ver `src/config.py`). Si no hay novedad fresca disponible
 esa semana, el slot se rellena con un evergreen extra — la semana nunca sale vacía.
 
+Cada placa de `contenido` es una "idea" densa: `titulo` + `deck` + `secciones` con
+labels fijos por tipo (`src/contenido.py:SECCIONES_POR_TIPO`). La unidad de idea
+depende del tipo: novedad → un cambio de la herramienta, comparativa → una opción,
+rol → una skill, tip → el tip entero (acá "el código" es una sección más, con el
+snippet real en vez de texto).
+
 Plantillas HTML (tema oscuro, Playwright las renderiza a PNG 1080×1350):
-`plantillas/portada.html`, `idea.html`, `comparativa.html`, `codigo.html`, `cierre.html`,
-más `plantillas/_estilos.html` (estilos compartidos, no es una placa en sí).
+`plantillas/portada.html`, `contenido.html`, `cierre.html`, más
+`plantillas/_estilos.html` (estilos compartidos, no es una placa en sí).
 
 ## 4. Estado y bancos
 
@@ -147,7 +153,8 @@ primera corrida hay que lanzarla a mano (Actions → *Generar contenido Data Sna
 | Feeds RSS de novedades (agregar/sacar fuentes) | `datos/feeds.json` |
 | Ventana de "novedad fresca" (cuántos días atrás cuenta como actualidad) | `src/config.py` → `FRESCURA_DIAS` |
 | Contenido evergreen (comparativas, roles, tips) | `datos/comparativas.json`, `datos/roles.json`, `datos/tips.json` (agregar entradas con `id` nuevo) |
-| Diseño visual de las placas | `plantillas/*.html` (`portada`, `idea`, `comparativa`, `codigo`, `cierre`, `_estilos`) |
+| Diseño visual de las placas | `plantillas/*.html` (`portada`, `contenido`, `cierre`, `_estilos`) |
+| Labels de las secciones de cada placa | `src/contenido.py` → `SECCIONES_POR_TIPO` |
 | Duración de cada placa en el reel | `src/config.py` → `SEGUNDOS_POR_SLIDE` |
 | Pausa entre llamadas a Gemini (anti rate-limit) | `src/config.py` → `Config.pausa_entre_llamadas` |
 
@@ -163,4 +170,4 @@ entorno, el test de reel se saltea (`skip`) en vez de fallar — el sistema en s
 degrada igual en producción (pieza sin reel, corrida no se cae).
 
 ---
-Última actualización: 2026-07-03.
+Última actualización: 2026-07-14.

@@ -63,8 +63,13 @@ Labels fijos por tipo (definidos en el código, no en el contenido):
 |---|---|
 | `novedad` | ➤ QUÉ CAMBIÓ · ➤ POR QUÉ IMPORTA |
 | `comparativa` | ➤ CUÁNDO CONVIENE · ➤ DÓNDE DUELE |
-| `rol` | ➤ QUÉ HACE · ➤ SKILLS CLAVE · ➤ SUELDO |
+| `rol` | ➤ POR QUÉ TE LA PIDEN · ➤ CÓMO LA PRACTICÁS (cada placa es una skill del rol) |
 | `tip` | ➤ EL PROBLEMA · ➤ EL CÓDIGO · ➤ POR QUÉ FUNCIONA |
+
+Descartado: la sección `➤ SUELDO` del borrador inicial. Los bancos no traen sueldos y
+`VOZ_DE_MARCA` prohíbe inventar números, así que solo se podría llenar inventando.
+El `veredicto` de una comparativa tampoco entra en las placas (las secciones son fijas):
+sigue viviendo en el caption.
 
 En `tip`, el `codigo` se renderiza dentro de la sección `EL CÓDIGO`; deja de existir la
 placa `codigo.html` separada.

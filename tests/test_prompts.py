@@ -22,3 +22,19 @@ def test_prompt_comparativa_lista_opciones():
     assert "A" in p and "pasa Y." in p
     assert "B" in p and "pasa W." in p
     assert "{'nombre'" not in p
+
+
+def test_prompt_rol_incluye_material_rico_de_skills():
+    item = {"rol": "Data Analyst", "gancho": "g",
+            "herramientas": ["SQL", "Power BI"],
+            "skills": [
+                {"nombre": "SQL", "por_que": "sin SQL dependés de otro.",
+                 "como_practicar": "resolvé preguntas con JOIN y GROUP BY."},
+                {"nombre": "Power BI", "por_que": "el dashboard es el formato final.",
+                 "como_practicar": "armá un tablero con filtros propios."},
+            ]}
+    p = prompts.prompt_rol(item)
+    assert "sin SQL dependés de otro." in p
+    assert "resolvé preguntas con JOIN y GROUP BY." in p
+    assert "el dashboard es el formato final." in p
+    assert "{'nombre'" not in p

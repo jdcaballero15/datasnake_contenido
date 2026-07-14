@@ -73,6 +73,19 @@ def test_construir_placas_adds_carousel_metadata_to_every_plate():
     assert placas[-1]["variant"] == "close"
 
 
+def test_plan_b_rol_usa_nombres_de_skills_ricas():
+    item = {"id": "r01", "rol": "Data Analyst", "gancho": "g",
+            "herramientas": ["SQL", "Power BI"],
+            "skills": [
+                {"nombre": "SQL", "por_que": "x" * 30, "como_practicar": "y" * 30},
+                {"nombre": "Power BI", "por_que": "x" * 30, "como_practicar": "y" * 30},
+            ]}
+    red = main.plan_b("rol", item)
+    assert "SQL" in red["caption"] and "Power BI" in red["caption"]
+    assert "{'nombre'" not in red["caption"]
+    assert red["ideas"][0]["texto"] == "SQL, Power BI"
+
+
 def test_construir_placas_uses_code_variant_for_tip_snippet():
     red = {
         "titulo_portada": "TOP N\nEN SQL",

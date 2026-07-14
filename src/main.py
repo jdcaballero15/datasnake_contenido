@@ -69,10 +69,11 @@ def plan_b(tipo: str, item: dict) -> dict:
                   " ".join(item["opciones"]) + f"\n\n{item['veredicto']}")
         return {**base, "titulo_portada": item["tarea"][:60].upper(), "ideas": ideas, "caption": cuerpo}
     if tipo == "rol":
-        ideas = [{"titulo": "Skills", "texto": ", ".join(item["skills"])},
+        nombres_skills = [s["nombre"] for s in item["skills"]]
+        ideas = [{"titulo": "Skills", "texto": ", ".join(nombres_skills)},
                  {"titulo": "Herramientas", "texto": ", ".join(item["herramientas"])}]
         cuerpo = (f"{item['rol']}: {item['gancho']}\n\n"
-                  f"Skills clave: {', '.join(item['skills'])}.\n\n"
+                  f"Skills clave: {', '.join(nombres_skills)}.\n\n"
                   f"Herramientas: {', '.join(item['herramientas'])}. "
                   "Si apuntás a este rol, arrancá por lo que más se repite en las búsquedas.")
         return {**base, "titulo_portada": item["rol"].upper(), "ideas": ideas, "caption": cuerpo}

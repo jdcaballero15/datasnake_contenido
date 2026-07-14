@@ -71,12 +71,15 @@ veredicto. Concreto y honesto, sin fanatismos de herramienta.
 
 
 def prompt_rol(item: dict) -> str:
-    skills = ", ".join(item["skills"])
+    skills = "\n".join(
+        f"- {s['nombre']}: te la piden porque {s['por_que']} Se practica así: {s['como_practicar']}"
+        for s in item["skills"])
     return f"""{VOZ_DE_MARCA}
 
 Material — rol del mundo data: "{item['rol']}".
 Gancho: {item['gancho']}
-Skills: {skills}
+Skills:
+{skills}
 Herramientas: {", ".join(item['herramientas'])}
 
 TAREA — Armá un carrusel sobre el rol: portada + 3 a 5 ideas (qué hace, qué

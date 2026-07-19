@@ -47,10 +47,11 @@ def _leer_piezas(lote_dir: Path) -> list[dict]:
 def generar_pagina(lote_dir: Path, destino_dir: Path) -> Path:
     """Escribe destino_dir/index.html con el lote y devuelve su ruta."""
     destino_dir.mkdir(parents=True, exist_ok=True)
+    piezas = _leer_piezas(lote_dir)
     env = Environment(loader=FileSystemLoader(DIR_PLANTILLAS), autoescape=True)
     fecha = lote_dir.name.replace("semana-", "")
     html = env.get_template("pagina.html").render(
-        piezas=_leer_piezas(lote_dir),
+        piezas=piezas,
         fecha=fecha,
         c={"fondo": COLOR_FONDO, "texto": COLOR_TEXTO, "acento": COLOR_ACENTO,
            "surface": COLOR_SURFACE, "borde": COLOR_BORDE, "texto_sec": COLOR_TEXTO_SEC,
@@ -58,7 +59,7 @@ def generar_pagina(lote_dir: Path, destino_dir: Path) -> Path:
     )
     destino = destino_dir / "index.html"
     destino.write_text(html, encoding="utf-8")
-    log.info("Página generada: %s (%d piezas)", destino, len(_leer_piezas(lote_dir)))
+    log.info("Página generada: %s (%d piezas)", destino, len(piezas))
     return destino
 
 

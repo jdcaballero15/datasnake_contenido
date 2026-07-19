@@ -4,8 +4,9 @@
 # la primera corrida se lanza a mano con el botón de workflow_dispatch
 # (Actions → Generar contenido Data Snake → Run workflow). De ahí en más el cron anda.
 #
-# Publicación 100% MANUAL: este workflow solo genera el lote y lo deja en Drive
-# (y como artifact de respaldo). No hay workflow de publicación (sin Meta API).
+# La publicación a Instagram sigue siendo 100% MANUAL (sin Meta API): el dueño baja
+# el carrusel y lo postea a mano. Este workflow genera el lote, lo deja en Drive (y
+# como artifact de respaldo) y publica una página de descarga en GitHub Pages.
 #
 # Secrets necesarios (Settings → Secrets and variables → Actions):
 #   GEMINI_API_KEY    — API key de https://aistudio.google.com (free tier)

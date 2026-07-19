@@ -87,14 +87,21 @@ async function bajarTodas(btn) {
     return new File([blob], nombre, { type: 'image/png' });
   }));
   if (navigator.canShare && navigator.canShare({ files })) {
-    try { await navigator.share({ files }); } catch (e) { /* cancelado por el usuario */ }
-  } else {
-    // Fallback (desktop / sin share de archivos): descarga individual.
-    for (const f of files) {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(f); a.download = f.name; a.click();
-      URL.revokeObjectURL(a.href);
+    try {
+      await navigator.share({ files });
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;  // el usuario canceló a propósito
+      // cualquier otro error (ej. activación transitoria expirada) → caemos al fallback
     }
+  }
+  descargarIndividual(files);
+}
+function descargarIndividual(files) {
+  for (const f of files) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f); a.download = f.name; a.click();
+    URL.revokeObjectURL(a.href);
   }
 }
 async function copiarCaption(btn) {

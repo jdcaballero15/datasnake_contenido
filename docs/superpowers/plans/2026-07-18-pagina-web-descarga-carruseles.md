@@ -97,9 +97,10 @@ def test_generar_pagina_escribe_html_autocontenido(tmp_path):
     # caption y título presentes
     assert "Mirá esta herramienta #data" in html
     assert "ZERO COPY S3" in html
-    # una sección por pieza, con sus dos botones
-    assert html.count("bajarTodas(") == 1
-    assert html.count("copiarCaption(") == 1
+    # una sección por pieza, con sus dos botones (contamos el onclick, no la
+    # definición de la función, que también contiene "bajarTodas(")
+    assert html.count("bajarTodas(this)") == 1
+    assert html.count("copiarCaption(this)") == 1
 
 
 def test_lote_mas_reciente(tmp_path):

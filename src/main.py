@@ -34,14 +34,16 @@ TIPOS = {
 }
 
 
-def plan_semana(cfg: Config, seed: int, novedad: dict | None) -> list[dict]:
-    """1 novedad (si hay) + 2 evergreen rotando por seed. Si no hay novedad,
-    ese slot cae a un evergreen extra (nunca semana vacía)."""
+def plan_dia(cfg: Config, seed: int, novedad: dict | None) -> list[dict]:
+    """PIEZAS_POR_DIA piezas, novedad-first: 1 novedad si hay, el resto evergreen
+    rotando por seed sin repetir. Nunca un lote vacío (mínimo 1 evergreen)."""
+    total = max(1, cfg.piezas_por_dia)
     rnd = random.Random(seed)
     tipos_ev = list(cfg.tipos_evergreen)
     rnd.shuffle(tipos_ev)
-    n_evergreen = cfg.mix["evergreen"] + (0 if novedad else cfg.mix["novedad"])
-    elegidos_ev = (tipos_ev * 3)[:n_evergreen]
+    n_novedad = 1 if novedad else 0
+    n_evergreen = max(0, total - n_novedad)
+    elegidos_ev = [tipos_ev[i % len(tipos_ev)] for i in range(n_evergreen)]
 
     piezas: list[dict] = []
     if novedad:
@@ -132,8 +134,8 @@ def construir_placas(tipo: str, red: dict) -> list[dict]:
     return placas
 
 
-def armar_pieza(indice, tipo, item, red, cfg, renderer, lote_semana):
-    carpeta = lote_semana / f"{indice:02d}-{tipo}"
+def armar_pieza(indice, tipo, item, red, cfg, renderer, lote_dia):
+    carpeta = lote_dia / f"{indice:02d}-{tipo}"
     carpeta.mkdir(parents=True, exist_ok=True)
     for i, ctx in enumerate(construir_placas(tipo, red), start=1):
         renderer.render_placa(ctx, carpeta / f"{i:02d}.png")
@@ -217,17 +219,16 @@ def main(argv=None) -> int:
 
     cfg = get_config()
     hoy = date.today()
-    lote_semana = cfg.dir_salida / f"semana-{hoy:%Y-%m-%d}"
+    lote_dia = cfg.dir_salida / f"lote-{hoy:%Y-%m-%d}"
 
     if args.dry_run:
         piezas = [{"tipo": t, "item": {"id": "dry"}} for t in TIPOS]
         redacciones = [DRY_RUN[p["tipo"]] for p in piezas]
         novedad = None
     else:
-        anio, semana, _ = hoy.isocalendar()
-        seed = anio * 100 + semana
+        seed = hoy.toordinal()
         novedad = feeds.elegir_novedad(cfg)
-        piezas = plan_semana(cfg, seed, novedad)
+        piezas = plan_dia(cfg, seed, novedad)
         redacciones = []
         for p in piezas:
             redacciones.append(redactar_pieza(p["tipo"], p["item"], cfg))
@@ -237,14 +238,14 @@ def main(argv=None) -> int:
     with Renderer(cfg) as renderer:
         for i, (pieza, red) in enumerate(zip(piezas, redacciones), start=1):
             try:
-                carpeta = armar_pieza(i, pieza["tipo"], pieza["item"], red, cfg, renderer, lote_semana)
+                carpeta = armar_pieza(i, pieza["tipo"], pieza["item"], red, cfg, renderer, lote_dia)
                 log.info("Pieza %02d lista: %s", i, carpeta.name)
             except Exception as e:  # noqa: BLE001
                 fallidas += 1
                 log.error("Pieza %02d (%s) falló: %s", i, pieza["tipo"], e)
 
-    if lote_semana.exists():
-        exportar.exportar(lote_semana, cfg.dir_salida / "ParaSubir" / lote_semana.name)
+    if lote_dia.exists():
+        exportar.exportar(lote_dia, cfg.dir_salida / "ParaSubir" / lote_dia.name)
 
     if not args.dry_run:
         if novedad:
@@ -254,7 +255,7 @@ def main(argv=None) -> int:
                 ids = [p["item"]["id"] for p in piezas if p["tipo"] == tipo]
                 registrar_usados(cfg, banco, ids)
 
-    log.info("Lote %s: %d piezas, %d fallidas", lote_semana.name, len(piezas), fallidas)
+    log.info("Lote %s: %d piezas, %d fallidas", lote_dia.name, len(piezas), fallidas)
     return 0 if fallidas < len(piezas) else 1
 
 

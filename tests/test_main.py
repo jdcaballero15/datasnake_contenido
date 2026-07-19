@@ -2,21 +2,32 @@ from src import main
 from src.config import get_config
 
 
-def test_plan_semana_sin_novedad_da_tres_evergreen(monkeypatch, tmp_path):
+def test_plan_dia_sin_novedad_un_evergreen(monkeypatch, tmp_path):
     cfg = get_config()
     cfg.dir_estado = tmp_path
-    piezas = main.plan_semana(cfg, seed=202627, novedad=None)
-    assert len(piezas) == 3
-    assert all(p["tipo"] in cfg.tipos_evergreen for p in piezas)
+    piezas = main.plan_dia(cfg, seed=202627, novedad=None)
+    assert len(piezas) == 1
+    assert piezas[0]["tipo"] in cfg.tipos_evergreen
 
 
-def test_plan_semana_con_novedad(tmp_path):
+def test_plan_dia_con_novedad_una_pieza_novedad(tmp_path):
     cfg = get_config()
     cfg.dir_estado = tmp_path
     nov = {"id": "http://x/1", "titulo": "T", "resumen": "R", "link": "http://x/1", "fuente": "PBI"}
-    piezas = main.plan_semana(cfg, seed=202627, novedad=nov)
+    piezas = main.plan_dia(cfg, seed=202627, novedad=nov)
+    assert len(piezas) == 1
     assert piezas[0]["tipo"] == "novedad"
-    assert len(piezas) == 3  # 1 novedad + 2 evergreen
+
+
+def test_plan_dia_volumen_mayor_novedad_mas_evergreen(tmp_path):
+    cfg = get_config()
+    cfg.dir_estado = tmp_path
+    cfg.piezas_por_dia = 3
+    nov = {"id": "http://x/1", "titulo": "T", "resumen": "R", "link": "http://x/1", "fuente": "PBI"}
+    piezas = main.plan_dia(cfg, seed=202627, novedad=nov)
+    assert len(piezas) == 3
+    assert piezas[0]["tipo"] == "novedad"
+    assert all(p["tipo"] in cfg.tipos_evergreen for p in piezas[1:])
 
 
 IDEA = {"titulo": "Excel", "deck": "Limpiar filas",
@@ -88,10 +99,11 @@ def test_armar_caption_capa_hashtags_en_5():
     assert cap.count("#") == 5
 
 
-def test_plan_semana_usa_seeds_deterministas(monkeypatch, tmp_path):
+def test_plan_dia_usa_seeds_deterministas(monkeypatch, tmp_path):
     from src.fuentes import bancos
     cfg = get_config()
     cfg.dir_estado = tmp_path
+    cfg.piezas_por_dia = 3
     seeds = []
     real = bancos.seleccionar
 
@@ -100,8 +112,8 @@ def test_plan_semana_usa_seeds_deterministas(monkeypatch, tmp_path):
         return real(c, banco, cantidad, seed)
 
     monkeypatch.setattr(main, "seleccionar", spy)
-    main.plan_semana(cfg, seed=202627, novedad=None)  # no novedad → 3 evergreen slots
-    assert seeds == [202628, 202629, 202630]  # seed+1, +2, +3 — deterministic, not hash-based
+    main.plan_dia(cfg, seed=202627, novedad=None)  # sin novedad → 3 evergreen slots
+    assert seeds == [202628, 202629, 202630]  # seed+1, +2, +3 — determinista
 
 
 def test_plan_b_rol_usa_ideas_densas_por_skill():

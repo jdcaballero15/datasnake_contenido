@@ -14,11 +14,11 @@ def test_brand_strings():
     assert get_config().ig_handle == "data.snake"
 
 
-def test_mix_is_one_novedad_two_evergreen():
+def test_piezas_por_dia_default_uno():
     cfg = get_config()
-    assert config.MIX_NOVEDAD == 1
+    assert config.PIEZAS_POR_DIA == 1
+    assert cfg.piezas_por_dia == 1
     assert set(config.TIPOS_EVERGREEN) == {"comparativa", "rol", "tip"}
-    assert cfg.mix["evergreen"] == 2
 
 
 def test_hashtags_capped_at_five():

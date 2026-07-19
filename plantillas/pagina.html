@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Snake — {{ fecha }}</title>
+<style>
+  :root {
+    --fondo: {{ c.fondo }}; --texto: {{ c.texto }}; --acento: {{ c.acento }};
+    --surface: {{ c.surface }}; --borde: {{ c.borde }}; --sec: {{ c.texto_sec }};
+    --grad_a: {{ c.grad_a }}; --grad_b: {{ c.grad_b }};
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fondo); color: var(--texto);
+    font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 60px; }
+  header { text-align: center; margin-bottom: 28px; }
+  header .marca {
+    font-weight: 800; font-size: 26px;
+    background: linear-gradient(90deg, var(--grad_a), var(--grad_b));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  header .fecha { color: var(--sec); font-size: 14px; margin-top: 4px; }
+  .pieza {
+    background: var(--surface); border: 1px solid var(--borde);
+    border-radius: 14px; padding: 16px; margin-bottom: 28px;
+  }
+  .pieza .tipo {
+    display: inline-block; font-size: 12px; letter-spacing: 1px; font-weight: 700;
+    color: var(--fondo); background: var(--grad_b); padding: 3px 9px; border-radius: 6px;
+    text-transform: uppercase;
+  }
+  .pieza h2 { font-size: 19px; margin: 10px 0 14px; }
+  .placas img.placa {
+    width: 100%; max-width: 100%; height: auto; display: block;
+    border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--borde);
+  }
+  .acciones { display: flex; gap: 10px; margin: 14px 0; flex-wrap: wrap; }
+  button {
+    flex: 1 1 140px; cursor: pointer; font-size: 15px; font-weight: 600;
+    padding: 12px 14px; border-radius: 10px; border: 1px solid var(--borde);
+    background: var(--acento); color: #fff;
+  }
+  button.sec { background: transparent; color: var(--texto); }
+  .caption {
+    white-space: pre-wrap; word-break: break-word; font-size: 14px;
+    background: var(--fondo); border: 1px solid var(--borde); border-radius: 10px;
+    padding: 12px; margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="marca">Data Snake</div>
+    <div class="fecha">Semana del {{ fecha }}</div>
+  </header>
+
+  {% for pieza in piezas %}
+  <section class="pieza">
+    <span class="tipo">{{ pieza.tipo }}</span>
+    <h2>{{ pieza.titulo }}</h2>
+    <div class="placas">
+      {% for img in pieza.imagenes %}
+      <img class="placa" src="{{ img }}" alt="placa {{ loop.index }}">
+      {% endfor %}
+    </div>
+    <div class="acciones">
+      <button onclick="bajarTodas(this)">📥 Bajar todas</button>
+      <button class="sec" onclick="copiarCaption(this)">📋 Copiar caption</button>
+    </div>
+    <div class="caption">{{ pieza.caption }}</div>
+  </section>
+  {% endfor %}
+</div>
+
+<script>
+async function bajarTodas(btn) {
+  const sec = btn.closest('.pieza');
+  const imgs = [...sec.querySelectorAll('img.placa')];
+  const files = await Promise.all(imgs.map(async (img, i) => {
+    const blob = await (await fetch(img.src)).blob();
+    const nombre = 'placa-' + String(i + 1).padStart(2, '0') + '.png';
+    return new File([blob], nombre, { type: 'image/png' });
+  }));
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try {
+      await navigator.share({ files });
+      return;
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;  // el usuario canceló a propósito
+      // cualquier otro error (ej. activación transitoria expirada) → caemos al fallback
+    }
+  }
+  descargarIndividual(files);
+}
+function descargarIndividual(files) {
+  for (const f of files) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(f); a.download = f.name; a.click();
+    URL.revokeObjectURL(a.href);
+  }
+}
+async function copiarCaption(btn) {
+  const txt = btn.closest('.pieza').querySelector('.caption').textContent;
+  const original = btn.textContent;
+  try {
+    await navigator.clipboard.writeText(txt);
+    btn.textContent = '¡Copiado!';
+    setTimeout(() => { btn.textContent = original; }, 1500);
+  } catch (e) {
+    // Fallback: seleccionar el texto para copiar a mano.
+    const sel = window.getSelection(); const rango = document.createRange();
+    rango.selectNodeContents(btn.closest('.pieza').querySelector('.caption'));
+    sel.removeAllRanges(); sel.addRange(rango);
+  }
+}
+</script>
+</body>
+</html>

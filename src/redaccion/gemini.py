@@ -26,9 +26,13 @@ import requests
 log = logging.getLogger("sosiego.gemini")
 
 URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-MODEL_DEFAULT = "gemini-2.5-flash"  # 2.0-flash quedó sin cupo free tier (429 persistente, 2026-06-04)
+# 2026-07-18: las keys nuevas ya no pueden usar los alias pinneados viejos
+# (gemini-2.5-flash → 404 "no longer available to new users"; gemini-2.0-flash* → 429
+# con cupo cero). Usamos los alias rolling "-latest", que Google mantiene apuntando
+# siempre a un modelo vigente y no se deprecan bajo una key nueva.
+MODEL_DEFAULT = "gemini-flash-latest"
 # Si el modelo principal está sin cupo (429 persistente), se prueban estos en orden.
-MODELOS_RESPALDO = ["gemini-2.0-flash-lite", "gemini-2.0-flash"]
+MODELOS_RESPALDO = ["gemini-flash-lite-latest", "gemini-3-flash-preview"]
 
 
 class GeminiError(Exception):

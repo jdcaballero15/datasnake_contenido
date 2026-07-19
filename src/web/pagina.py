@@ -44,38 +44,46 @@ def _leer_piezas(lote_dir: Path) -> list[dict]:
     return piezas
 
 
-def generar_pagina(lote_dir: Path, destino_dir: Path) -> Path:
-    """Escribe destino_dir/index.html con el lote y devuelve su ruta."""
+def _fecha_legible(nombre_lote: str) -> str:
+    iso = nombre_lote.replace("lote-", "")
+    try:
+        y, m, d = iso.split("-")
+        return f"{d}/{m}/{y}"
+    except ValueError:
+        return iso
+
+
+def _lotes_recientes(dir_salida: Path, n: int = 7) -> list[Path]:
+    lotes = sorted((p for p in dir_salida.glob("lote-*") if p.is_dir()),
+                   key=lambda p: p.name, reverse=True)
+    return lotes[:n]
+
+
+def generar_pagina(dir_salida: Path, destino_dir: Path, n_dias: int = 7) -> Path:
+    """Escribe destino_dir/index.html con los últimos n_dias lotes y devuelve su ruta."""
     destino_dir.mkdir(parents=True, exist_ok=True)
-    piezas = _leer_piezas(lote_dir)
+    dias = []
+    for lote in _lotes_recientes(dir_salida, n_dias):
+        piezas = _leer_piezas(lote)
+        if piezas:
+            dias.append({"fecha": _fecha_legible(lote.name), "piezas": piezas})
     env = Environment(loader=FileSystemLoader(DIR_PLANTILLAS), autoescape=True)
-    fecha = lote_dir.name.replace("semana-", "")
     html = env.get_template("pagina.html").render(
-        piezas=piezas,
-        fecha=fecha,
+        dias=dias,
         c={"fondo": COLOR_FONDO, "texto": COLOR_TEXTO, "acento": COLOR_ACENTO,
            "surface": COLOR_SURFACE, "borde": COLOR_BORDE, "texto_sec": COLOR_TEXTO_SEC,
            "grad_a": GRAD_A, "grad_b": GRAD_B},
     )
     destino = destino_dir / "index.html"
     destino.write_text(html, encoding="utf-8")
-    log.info("Página generada: %s (%d piezas)", destino, len(piezas))
+    log.info("Página generada: %s (%d días)", destino, len(dias))
     return destino
-
-
-def _lote_mas_reciente(dir_salida: Path) -> Path | None:
-    lotes = sorted(p for p in dir_salida.glob("semana-*") if p.is_dir())
-    return lotes[-1] if lotes else None
 
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO)
     salida = RAIZ / "salida"
-    lote = _lote_mas_reciente(salida)
-    if lote is None:
-        log.warning("No hay lote en %s: no se genera página", salida)
-        return
-    generar_pagina(lote, salida / "web")
+    generar_pagina(salida, salida / "web")
 
 
 if __name__ == "__main__":

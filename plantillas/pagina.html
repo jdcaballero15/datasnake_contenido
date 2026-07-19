@@ -33,7 +33,12 @@
     color: var(--fondo); background: var(--grad_b); padding: 3px 9px; border-radius: 6px;
     text-transform: uppercase;
   }
-  .pieza h2 { font-size: 19px; margin: 10px 0 14px; }
+  .pieza h3 { font-size: 19px; margin: 10px 0 14px; }
+  .dia { margin-bottom: 36px; }
+  .dia-fecha {
+    font-size: 15px; color: var(--sec); font-weight: 700; letter-spacing: .5px;
+    margin: 0 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--borde);
+  }
   .placas img.placa {
     width: 100%; max-width: 100%; height: auto; display: block;
     border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--borde);
@@ -56,23 +61,28 @@
 <div class="wrap">
   <header>
     <div class="marca">Data Snake</div>
-    <div class="fecha">Semana del {{ fecha }}</div>
+    <div class="fecha">Últimos días</div>
   </header>
 
-  {% for pieza in piezas %}
-  <section class="pieza">
-    <span class="tipo">{{ pieza.tipo }}</span>
-    <h2>{{ pieza.titulo }}</h2>
-    <div class="placas">
-      {% for img in pieza.imagenes %}
-      <img class="placa" src="{{ img }}" alt="placa {{ loop.index }}">
-      {% endfor %}
-    </div>
-    <div class="acciones">
-      <button onclick="bajarTodas(this)">📥 Bajar todas</button>
-      <button class="sec" onclick="copiarCaption(this)">📋 Copiar caption</button>
-    </div>
-    <div class="caption">{{ pieza.caption }}</div>
+  {% for dia in dias %}
+  <section class="dia">
+    <h2 class="dia-fecha">{{ dia.fecha }}</h2>
+    {% for pieza in dia.piezas %}
+    <section class="pieza">
+      <span class="tipo">{{ pieza.tipo }}</span>
+      <h3>{{ pieza.titulo }}</h3>
+      <div class="placas">
+        {% for img in pieza.imagenes %}
+        <img class="placa" src="{{ img }}" alt="placa {{ loop.index }}">
+        {% endfor %}
+      </div>
+      <div class="acciones">
+        <button onclick="bajarTodas(this)">📥 Bajar todas</button>
+        <button class="sec" onclick="copiarCaption(this)">📋 Copiar caption</button>
+      </div>
+      <div class="caption">{{ pieza.caption }}</div>
+    </section>
+    {% endfor %}
   </section>
   {% endfor %}
 </div>

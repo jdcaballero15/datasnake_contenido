@@ -71,9 +71,10 @@ jobs:
           # o espacios delante del JSON; rclone entonces no puede parsear el token
           # y no sube nada. Recortamos todo lo que haya antes del primer '{'.
           export RCLONE_CONFIG_GDRIVE_TOKEN="{${RCLONE_CONFIG_GDRIVE_TOKEN#*\{}"
-          rclone copy salida/ gdrive: --exclude "**/00-CAPTIONS.txt"
-          rclone copy salida/ gdrive: --include "**/00-CAPTIONS.txt" \
-            --drive-import-formats txt --drive-export-formats txt
+          # Subimos SOLO el lote crudo (salida/semana-<fecha>/, una subcarpeta por pieza
+          # con sus PNG + caption.txt). El export plano salida/ParaSubir/ NO va a Drive:
+          # duplicaba el lote y dejaba un ParaSubir/ParaSubir/ anidado (2026-07-18).
+          rclone copy salida/ gdrive: --exclude "ParaSubir/**"
 
       - name: Guardar lote como artifact (respaldo)
         if: always()

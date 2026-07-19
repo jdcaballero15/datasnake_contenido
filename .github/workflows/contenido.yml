@@ -28,6 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -75,6 +80,21 @@ jobs:
           # con sus PNG + caption.txt). El export plano salida/ParaSubir/ NO va a Drive:
           # duplicaba el lote y dejaba un ParaSubir/ParaSubir/ anidado (2026-07-18).
           rclone copy salida/ gdrive: --exclude "ParaSubir/**"
+
+      - name: Generar página web
+        run: python -m src.web.pagina
+
+      - name: Configurar Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir artifact de Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: salida/web
+
+      - name: Publicar en Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
       - name: Guardar lote como artifact (respaldo)
         if: always()

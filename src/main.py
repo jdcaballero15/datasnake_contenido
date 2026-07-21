@@ -14,7 +14,7 @@ from datetime import date
 
 from src import contenido, exportar
 from src.config import (CTA_COMPARTIR, CTA_GUARDAR, ESLOGAN, HASHTAGS_DEFAULT,
-                        Config, get_config)
+                        Config, PORTADA_VARIANTES, get_config)
 from src.fuentes import feeds
 from src.fuentes.bancos import registrar_usados, seleccionar
 from src.redaccion import prompts
@@ -32,6 +32,12 @@ TIPOS = {
     "rol": ("roles", prompts.prompt_rol),
     "tip": ("tips", prompts.prompt_tip),
 }
+
+
+def variante_portada(fecha: date) -> str:
+    """Devuelve la variante de portada correspondiente a la fecha del lote."""
+    indice = (fecha - date(2026, 7, 20)).days % len(PORTADA_VARIANTES)
+    return f"cover-{PORTADA_VARIANTES[indice]}"
 
 
 def plan_dia(cfg: Config, seed: int, novedad: dict | None) -> list[dict]:
@@ -102,7 +108,7 @@ def armar_caption(cuerpo: str, hashtags: list[str]) -> str:
     return f"{cuerpo.rstrip()}\n\n{CTA_COMPARTIR}\n{CTA_GUARDAR}\n\n{tags}"
 
 
-def construir_placas(tipo: str, red: dict) -> list[dict]:
+def construir_placas(tipo: str, red: dict, variante_cover: str = "cover-green") -> list[dict]:
     tag = {"novedad": "Novedad", "comparativa": "Comparativa",
            "rol": "Carrera en data", "tip": "Tip"}[tipo]
     palabra = contenido.KICKER_POR_TIPO[tipo]
@@ -112,7 +118,7 @@ def construir_placas(tipo: str, red: dict) -> list[dict]:
         "tag": tag,
         "titulo": red["titulo_portada"],
         "subtitulo": red.get("subtitulo", ESLOGAN),
-        "variant": "cover",
+        "variant": variante_cover,
     }]
     for i, idea in enumerate(red["ideas"], start=1):
         placas.append({
@@ -134,10 +140,10 @@ def construir_placas(tipo: str, red: dict) -> list[dict]:
     return placas
 
 
-def armar_pieza(indice, tipo, item, red, cfg, renderer, lote_dia):
+def armar_pieza(indice, tipo, item, red, cfg, renderer, lote_dia, variante_cover):
     carpeta = lote_dia / f"{indice:02d}-{tipo}"
     carpeta.mkdir(parents=True, exist_ok=True)
-    for i, ctx in enumerate(construir_placas(tipo, red), start=1):
+    for i, ctx in enumerate(construir_placas(tipo, red, variante_cover), start=1):
         renderer.render_placa(ctx, carpeta / f"{i:02d}.png")
     generar_reel(carpeta, cfg, seed=indice)  # opcional; None si no se puede
     (carpeta / "caption.txt").write_text(
@@ -219,6 +225,7 @@ def main(argv=None) -> int:
 
     cfg = get_config()
     hoy = date.today()
+    variante_cover = variante_portada(hoy)
     lote_dia = cfg.dir_salida / f"lote-{hoy:%Y-%m-%d}"
 
     if args.dry_run:
@@ -238,7 +245,7 @@ def main(argv=None) -> int:
     with Renderer(cfg) as renderer:
         for i, (pieza, red) in enumerate(zip(piezas, redacciones), start=1):
             try:
-                carpeta = armar_pieza(i, pieza["tipo"], pieza["item"], red, cfg, renderer, lote_dia)
+                carpeta = armar_pieza(i, pieza["tipo"], pieza["item"], red, cfg, renderer, lote_dia, variante_cover)
                 log.info("Pieza %02d lista: %s", i, carpeta.name)
             except Exception as e:  # noqa: BLE001
                 fallidas += 1

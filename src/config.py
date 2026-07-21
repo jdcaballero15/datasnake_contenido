@@ -18,6 +18,14 @@ GRAD_A = "#7C5CBF"             # Slate Violet
 GRAD_B = "#2EE6A6"             # verde del logo
 COLOR_HUESO = "#EEE9E1"        # fondo de la placa clara
 
+PORTADA_VARIANTES = ("green", "violet", "blue", "coral")
+COLORES_PORTADA = {
+    "green": {"fondo": "#2EE6A6", "texto": "#0B1F1A"},
+    "violet": {"fondo": "#A78BFA", "texto": "#17122C"},
+    "blue": {"fondo": "#60A5FA", "texto": "#0B1B35"},
+    "coral": {"fondo": "#FB7185", "texto": "#311018"},
+}
+
 # Carruseles por corrida (diaria). El "dial" para escalar volumen: subilo para generar
 # más por día. OJO: muy arriba, los 45 evergreen se repiten rápido y las novedades RSS
 # no dan abasto — habría que sumar feeds/bancos.

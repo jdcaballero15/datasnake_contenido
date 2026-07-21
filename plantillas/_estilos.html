@@ -8,7 +8,10 @@
     width:1080px; height:1350px; padding:72px 76px 64px;
     display:flex; flex-direction:column; position:relative; overflow:hidden;
   }
-  .variant-cover { background:{{ c.grad_b }}; color:#0B1F1A; }
+{% for nombre, color in c.colores_portada.items() %}
+  .variant-cover-{{ nombre }} { background:{{ color.fondo }}; color:{{ color.texto }}; }
+  .variant-cover-{{ nombre }} .kicker { color:{{ color.texto }}; }
+{% endfor %}
   .variant-dark, .variant-close { background:{{ c.fondo }}; color:{{ c.texto }}; }
   .variant-light { background:{{ c.hueso }}; color:#111827; }
 
@@ -33,7 +36,6 @@
     font-weight:900; color:{{ c.grad_b }};
   }
   .variant-light .kicker { color:{{ c.grad_a }}; }
-  .variant-cover .kicker { color:#0B1F1A; }
 
   .title {
     font-family:'Anton',Impact,sans-serif; font-weight:400; text-transform:uppercase;

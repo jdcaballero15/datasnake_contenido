@@ -18,8 +18,11 @@ GRAD_A = "#7C5CBF"             # Slate Violet
 GRAD_B = "#2EE6A6"             # verde del logo
 COLOR_HUESO = "#EEE9E1"        # fondo de la placa clara
 
-# Mix semanal: 1 novedad (RSS) + 2 evergreen rotando entre estos tipos.
-MIX_NOVEDAD = 1
+# Carruseles por corrida (diaria). El "dial" para escalar volumen: subilo para generar
+# más por día. OJO: muy arriba, los 45 evergreen se repiten rápido y las novedades RSS
+# no dan abasto — habría que sumar feeds/bancos.
+PIEZAS_POR_DIA = 1
+# Tipos evergreen que rotan cuando no hay (o sobran) novedades.
 TIPOS_EVERGREEN = ["comparativa", "rol", "tip"]
 
 # Ventana de frescura de las novedades (la corrida es semanal).
@@ -48,7 +51,7 @@ class Config:
     dir_plantillas: Path = RAIZ / "plantillas"
     ruta_logo: Path = RAIZ / "marca" / "logos" / "logo.png"
     ig_handle: str = "data.snake"
-    mix: dict = field(default_factory=lambda: {"novedad": MIX_NOVEDAD, "evergreen": 2})
+    piezas_por_dia: int = PIEZAS_POR_DIA
     tipos_evergreen: list = field(default_factory=lambda: list(TIPOS_EVERGREEN))
     reel_activado: bool = REEL_ACTIVADO
     segundos_por_slide: int = SEGUNDOS_POR_SLIDE

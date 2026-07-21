@@ -1,4 +1,4 @@
-# Lote semanal de contenido — domingos 08:00 ARG (11:00 UTC).
+# Lote diario de contenido — todos los días 08:00 ARG (11:00 UTC).
 #
 # IMPORTANTE: el PRIMER cron de un workflow nuevo no suele dispararse solo;
 # la primera corrida se lanza a mano con el botón de workflow_dispatch
@@ -22,7 +22,7 @@ name: Generar contenido Data Snake
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 11 * * 0"   # domingos 11:00 UTC = 08:00 ARG
+    - cron: "0 11 * * *"   # todos los días 11:00 UTC = 08:00 ARG
 
 jobs:
   generar:
@@ -81,6 +81,19 @@ jobs:
           # con sus PNG + caption.txt). El export plano salida/ParaSubir/ NO va a Drive:
           # duplicaba el lote y dejaba un ParaSubir/ParaSubir/ anidado (2026-07-18).
           rclone copy salida/ gdrive: --exclude "ParaSubir/**"
+
+      - name: Bajar lotes recientes de Drive
+        env:
+          RCLONE_CONFIG_GDRIVE_TYPE: drive
+          RCLONE_CONFIG_GDRIVE_SCOPE: drive
+          RCLONE_CONFIG_GDRIVE_TOKEN: ${{ secrets.GDRIVE_TOKEN }}
+          RCLONE_CONFIG_GDRIVE_ROOT_FOLDER_ID: ${{ secrets.GDRIVE_FOLDER_ID }}
+        run: |
+          export RCLONE_CONFIG_GDRIVE_TOKEN="{${RCLONE_CONFIG_GDRIVE_TOKEN#*\{}"
+          # La página muestra los últimos ~7 días, pero el runner arranca en limpio:
+          # traemos de Drive (el archivo histórico) los lotes subidos en los últimos 8 días.
+          # La página lee solo carpetas lote-*; lo que no matchee se ignora.
+          rclone copy gdrive: salida/ --max-age 8d
 
       - name: Generar página web
         run: python -m src.web.pagina

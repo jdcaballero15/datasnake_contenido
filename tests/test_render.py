@@ -1,11 +1,19 @@
 import re
 
+import pytest
+
 from src.config import get_config
 from src.render.renderer import Renderer
 
 C = {"fondo": "#111827", "texto": "#CBD5E1", "acento": "#2A7FA8", "borde": "#253347",
      "surface": "#1C2B3A", "texto_sec": "#7B91A8", "grad_a": "#7C5CBF",
-     "grad_b": "#2EE6A6", "hueso": "#EEE9E1"}
+     "grad_b": "#2EE6A6", "hueso": "#EEE9E1",
+     "colores_portada": {
+         "green": {"fondo": "#2EE6A6", "texto": "#0B1F1A"},
+         "violet": {"fondo": "#A78BFA", "texto": "#17122C"},
+         "blue": {"fondo": "#60A5FA", "texto": "#0B1B35"},
+         "coral": {"fondo": "#FB7185", "texto": "#311018"},
+     }}
 
 SECCIONES = [
     {"label": "el problema", "texto": "Top N por grupo sin subconsultas."},
@@ -98,7 +106,18 @@ def test_variante_clara_existe():
     assert 'class="plate variant-light"' in html
 
 
-def test_portada_usa_variante_cover():
-    html = _render("portada", variant="cover")
-    assert 'class="plate variant-cover"' in html
+@pytest.mark.parametrize(
+    ("variant", "fondo", "texto"),
+    [
+        ("cover-green", "#2EE6A6", "#0B1F1A"),
+        ("cover-violet", "#A78BFA", "#17122C"),
+        ("cover-blue", "#60A5FA", "#0B1B35"),
+        ("cover-coral", "#FB7185", "#311018"),
+    ],
+)
+def test_portada_usa_cada_variante_de_color(variant, fondo, texto):
+    html = _render("portada", variant=variant)
+
+    assert f'class="plate variant-{variant}"' in html
+    assert f'.variant-{variant} {{ background:{fondo}; color:{texto}; }}' in html
     assert "TOP N" in html

@@ -1,3 +1,5 @@
+from datetime import date, timedelta
+
 from src import main
 from src.config import get_config
 
@@ -35,6 +37,24 @@ IDEA = {"titulo": "Excel", "deck": "Limpiar filas",
                       {"label": "dónde duele", "texto": "No queda documentado."}]}
 
 
+
+def test_variante_portada_es_estable_y_avanza_en_ciclo():
+    inicio = date(2026, 7, 20)
+
+    variantes = [main.variante_portada(inicio + timedelta(days=i)) for i in range(5)]
+
+    assert variantes == [
+        "cover-green", "cover-violet", "cover-blue", "cover-coral", "cover-green",
+    ]
+
+
+def test_construir_placas_usa_la_variante_de_portada_indicada():
+    placas = main.construir_placas(
+        "tip", {"titulo_portada": "X", "ideas": [IDEA]}, "cover-coral")
+
+    assert placas[0]["variant"] == "cover-coral"
+    assert placas[1]["variant"] == "dark"
+    assert placas[-1]["variant"] == "close"
 def test_construir_placas_usa_una_placa_contenido_por_idea():
     red = {"titulo_portada": "EXCEL VS\nPYTHON", "ideas": [IDEA, IDEA]}
 
@@ -43,7 +63,7 @@ def test_construir_placas_usa_una_placa_contenido_por_idea():
     assert [p["plantilla"] for p in placas] == ["portada", "contenido", "contenido", "cierre"]
     assert [p["slide_index"] for p in placas] == [1, 2, 3, 4]
     assert {p["slide_total"] for p in placas} == {4}
-    assert placas[0]["variant"] == "cover" and placas[-1]["variant"] == "close"
+    assert placas[0]["variant"] == "cover-green" and placas[-1]["variant"] == "close"
 
 
 def test_construir_placas_pasa_secciones_y_kicker():
@@ -61,7 +81,7 @@ def test_tercera_idea_sale_en_placa_clara():
 
     variants = [p["variant"] for p in main.construir_placas("rol", red)]
 
-    assert variants == ["cover", "dark", "dark", "light", "dark", "close"]
+    assert variants == ["cover-green", "dark", "dark", "light", "dark", "close"]
 
 
 def test_plan_b_tip_arma_ideas_densas():

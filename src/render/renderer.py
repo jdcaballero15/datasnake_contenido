@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 from playwright.sync_api import sync_playwright
 
 from src.config import (COLOR_ACENTO, COLOR_BORDE, COLOR_FONDO, COLOR_HUESO,
-                        COLOR_SURFACE, COLOR_TEXTO, COLOR_TEXTO_SEC, ESLOGAN,
+                        COLOR_SURFACE, COLOR_TEXTO, COLOR_TEXTO_SEC, COLORES_PORTADA, ESLOGAN,
                         GRAD_A, GRAD_B, Config)
 
 log = logging.getLogger("sosiego.render")
@@ -75,6 +75,7 @@ class Renderer:
             "fondo": COLOR_FONDO, "texto": COLOR_TEXTO, "acento": COLOR_ACENTO,
             "borde": COLOR_BORDE, "surface": COLOR_SURFACE, "texto_sec": COLOR_TEXTO_SEC,
             "grad_a": GRAD_A, "grad_b": GRAD_B, "hueso": COLOR_HUESO,
+            "colores_portada": COLORES_PORTADA,
         })
 
         html = self.env.get_template(f"{contexto['plantilla']}.html").render(**contexto)

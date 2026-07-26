@@ -8,12 +8,13 @@ puntual acá; si algo falla, esa fuente rinde vacío y la corrida no se cae
 
 import json
 import time
+import unicodedata
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import feedparser
 
-from src.config import FRESCURA_DIAS, Config
+from src.config import FRESCURA_DIAS, TEMAS_VETADOS, Config
 
 
 def cargar_feeds(cfg: Config) -> list[dict]:
@@ -39,6 +40,18 @@ def registrar_vista(cfg: Config, entry_id: str) -> None:
     _ruta_vistas(cfg).parent.mkdir(parents=True, exist_ok=True)
     _ruta_vistas(cfg).write_text(
         json.dumps(vistas, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def _normalizar(texto: str) -> str:
+    """Minúsculas y sin acentos, para comparar sin sorpresas de tildes."""
+    sin_acentos = unicodedata.normalize("NFKD", texto).encode("ascii", "ignore").decode()
+    return sin_acentos.lower()
+
+
+def es_muy_tecnica(item: dict, vetados: list[str] = TEMAS_VETADOS) -> bool:
+    """True si el título o el resumen pegan con un término vetado (substring)."""
+    texto = _normalizar(f"{item.get('titulo', '')} {item.get('resumen', '')}")
+    return any(_normalizar(term) in texto for term in vetados)
 
 
 def _fecha(entry) -> datetime | None:
@@ -74,4 +87,9 @@ def elegir_novedad(cfg: Config, ahora: datetime | None = None, parse=feedparser.
     if not candidatas:
         return None
     candidatas.sort(key=lambda c: c[0], reverse=True)
-    return candidatas[0][1]
+    # De la más fresca a la más vieja, la primera que no sea muy técnica.
+    # Si todas quedan vetadas, None → main.py cae a un evergreen amigable.
+    for _, item in candidatas:
+        if not es_muy_tecnica(item):
+            return item
+    return None

@@ -36,6 +36,19 @@ TIPOS_EVERGREEN = ["comparativa", "rol", "tip"]
 # Ventana de frescura de las novedades (la corrida es semanal).
 FRESCURA_DIAS = 14
 
+# Filtro de novedades: si el título o el resumen de una novedad RSS pega con
+# alguno de estos términos, se descarta por "demasiado técnica/enterprise" y la
+# corrida cae a un evergreen amigable. El público es curioso→junior, no infra
+# senior. Match por substring, sin distinguir mayúsculas ni acentos. Editá la
+# lista a gusto: agregá lo que veas colarse, sacá lo que filtre de más.
+TEMAS_VETADOS = [
+    "redshift", "cross-account", "cross account", "sagemaker", "iam", "vpc",
+    "kubernetes", "k8s", "terraform", "cluster", "clúster", "airflow",
+    "kafka", "spark", "hadoop", "emr", "glue", "athena", "lambda", "s3 bucket",
+    "data lake", "lakehouse", "warehouse migration", "cdc", "orchestration",
+    "pipeline de datos", "ci/cd", "devops", "governance", "gobierno de datos",
+]
+
 ESLOGAN = "Herramientas, resultados y carrera en data"
 
 # Doble CTA fija del caption (señales del algoritmo: compartir + guardar), tono tech.

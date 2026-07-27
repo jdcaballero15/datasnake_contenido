@@ -1,4 +1,4 @@
-# Lote diario de contenido — todos los días 08:00 ARG (11:00 UTC).
+# Lote diario de contenido — todos los días 07:37 ARG (10:37 UTC).
 #
 # IMPORTANTE: el PRIMER cron de un workflow nuevo no suele dispararse solo;
 # la primera corrida se lanza a mano con el botón de workflow_dispatch
@@ -22,7 +22,12 @@ name: Generar contenido Data Snake
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 11 * * *"   # todos los días 11:00 UTC = 08:00 ARG
+    # Minuto 37 a propósito, NO en punto. Los cron de Actions no están garantizados:
+    # cuando hay cola GitHub los demora y si la demora es grande los descarta. El tope
+    # de hora es el horario más congestionado. Con "0 11" (2026-07-03 al 2026-07-27) la
+    # corrida nunca arrancó a horario — siempre 1h a 1h30 tarde — y se salteó 9 de 16
+    # días, incluido el 27/07 entero. Fuera del minuto 0 la cosa mejora bastante.
+    - cron: "37 10 * * *"   # todos los días 10:37 UTC = 07:37 ARG
 
 jobs:
   generar:

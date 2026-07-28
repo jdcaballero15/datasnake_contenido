@@ -154,6 +154,11 @@ repitas dentro de "secciones".
 
 {REGLAS_IDEAS}
 
+En este tipo, "por qué funciona" va SOLA en su propia placa del carrusel: ahí
+tenés lugar de sobra, así que escribí 3-4 oraciones (~350-500 caracteres) que
+expliquen la mecánica paso a paso y para qué le sirve a quien lee. "el problema"
+comparte placa con el código, así que ahí sí van 1-2 oraciones.
+
 {REGLAS_CAPTION}
 
 {_CIERRE}
@@ -164,7 +169,7 @@ repitas dentro de "secciones".
     "deck": "<una oración>",
     "secciones": [
       {{"label": "el problema", "texto": "<1-2 oraciones>"}},
-      {{"label": "por qué funciona", "texto": "<1-2 oraciones>"}}
+      {{"label": "por qué funciona", "texto": "<3-4 oraciones, ~350-500 caracteres>"}}
     ]
   }}],
   "codigo": "<el código, con saltos de línea reales>",

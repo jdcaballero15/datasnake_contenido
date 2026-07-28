@@ -51,3 +51,25 @@ def test_prompt_rol_incluye_material_rico_de_skills():
     assert "resolvé preguntas con JOIN y GROUP BY." in p
     assert "el dashboard es el formato final." in p
     assert "{'nombre'" not in p
+
+
+def test_prompt_tip_pide_por_que_funciona_mas_largo():
+    """"por qué funciona" ocupa su placa sola (ver contenido.grupos_de_placa),
+    así que el prompt tiene que pedir un texto que llene ese lugar en vez de
+    las 1-2 oraciones genéricas de REGLAS_IDEAS."""
+    item = {"titulo": "X", "lenguaje": "sql", "gancho": "g",
+            "codigo": "SELECT 1;", "explicacion": "e"}
+
+    p = prompts.prompt_tip(item)
+
+    assert "3-4 oraciones" in p
+    assert "350-500" in p
+
+
+def test_prompt_tip_sigue_pidiendo_el_problema_corto():
+    item = {"titulo": "X", "lenguaje": "sql", "gancho": "g",
+            "codigo": "SELECT 1;", "explicacion": "e"}
+
+    p = prompts.prompt_tip(item)
+
+    assert "1-2 oraciones" in p

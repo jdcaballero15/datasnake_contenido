@@ -55,6 +55,27 @@ KICKER_POR_TIPO: dict[str, str] = {
     "tip": "tip",
 }
 
+PLACAS_POR_TIPO: dict[str, list[list[str]]] = {
+    "tip": [["el problema", "el código"], ["por qué funciona"]],
+}
+"""Cómo se reparten las secciones de UNA idea entre placas del carrusel.
+
+Solo aparece acá el tipo que necesita más de una placa. El tip es el único con
+una sola idea, así que sin repartir sus tres secciones quedan apiladas en una
+placa que se ve saturada; los demás tipos ya respiran porque emiten una placa
+por unidad (una opción, una skill, un cambio).
+
+El orden de los labels dentro de cada grupo, y el de los grupos entre sí, es el
+orden en que se ven en el carrusel."""
+
+
+def grupos_de_placa(tipo: str) -> list[list[str]]:
+    """Los grupos de secciones de <tipo>: uno por placa de contenido.
+
+    El default —un único grupo con todos los labels del tipo— es lo que deja a
+    novedad, comparativa y rol exactamente como estaban: una placa por idea."""
+    return PLACAS_POR_TIPO.get(tipo, [SECCIONES_POR_TIPO[tipo]])
+
 
 def secciones_que_redacta_gemini(tipo: str) -> list[str]:
     """Los labels que Gemini debe devolver para <tipo>, en el orden esperado.

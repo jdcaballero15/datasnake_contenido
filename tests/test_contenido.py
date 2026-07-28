@@ -126,3 +126,29 @@ def test_ideas_desde_item_novedad_trunca_resumen_largo_en_limite_de_palabra():
     # queda tiene que ser una secuencia de palabras completas de "palabra "
     cuerpo = texto[:-1].strip()
     assert cuerpo != "" and all(p == "palabra" for p in cuerpo.split())
+
+
+def test_grupos_de_placa_tip_se_parte_en_dos():
+    """El tip es el único tipo con una sola idea: sin partirlo, sus tres
+    secciones caen todas en la misma placa y la placa queda saturada."""
+    assert contenido.grupos_de_placa("tip") == [
+        ["el problema", "el código"],
+        ["por qué funciona"],
+    ]
+
+
+def test_grupos_de_placa_los_demas_tipos_van_en_una_sola_placa():
+    """El default es lo que mantiene intactos a los otros tres tipos: un grupo
+    con todos sus labels, es decir una placa por idea, como siempre."""
+    for tipo in ("novedad", "comparativa", "rol"):
+        assert contenido.grupos_de_placa(tipo) == [contenido.SECCIONES_POR_TIPO[tipo]]
+
+
+def test_grupos_de_placa_no_pierde_ni_duplica_ni_reordena_secciones():
+    """Invariante del reparto: aplanar los grupos tiene que devolver
+    exactamente los labels del tipo, en el mismo orden. Sin esto, un typo en
+    PLACAS_POR_TIPO hace desaparecer una sección de la placa en silencio,
+    porque construir_placas descarta los labels que no reconoce."""
+    for tipo in contenido.SECCIONES_POR_TIPO:
+        aplanado = [label for grupo in contenido.grupos_de_placa(tipo) for label in grupo]
+        assert aplanado == contenido.SECCIONES_POR_TIPO[tipo], tipo

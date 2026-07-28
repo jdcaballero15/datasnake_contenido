@@ -3,7 +3,8 @@
 Si no valida, main.py reintenta una vez y si no, cae a plan B.
 """
 
-from src.contenido import MAX_CHARS_SECCION_TEXTO, secciones_que_redacta_gemini
+from src.contenido import (MAX_CHARS_SECCION_TEXTO, max_chars_seccion,
+                           secciones_que_redacta_gemini)
 
 MIN_CHARS_CAPTION = 400
 MAX_CHARS_PORTADA = 60
@@ -70,11 +71,11 @@ def validar(tipo: str, datos: dict) -> None:
                 raise ValueError(
                     f"{tipo}: idea {i} tiene una sección vacía o con 'texto' inválido "
                     f"({texto!r})")
-            if len(texto) > MAX_CHARS_SECCION_TEXTO:
+            tope = max_chars_seccion(tipo, seccion.get("label"))
+            if len(texto) > tope:
                 raise ValueError(
                     f"{tipo}: idea {i} tiene 'texto' de sección '{seccion.get('label')}' "
-                    f"muy largo ({len(texto)} > {MAX_CHARS_SECCION_TEXTO} chars, se corta "
-                    "en la placa)")
+                    f"muy largo ({len(texto)} > {tope} chars, se corta en la placa)")
         titulo_idea = idea.get("titulo", "")
         if not isinstance(titulo_idea, str) or len(titulo_idea) > MAX_CHARS_TITULO_IDEA:
             raise ValueError(

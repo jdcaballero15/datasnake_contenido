@@ -152,3 +152,23 @@ def test_grupos_de_placa_no_pierde_ni_duplica_ni_reordena_secciones():
     for tipo in contenido.SECCIONES_POR_TIPO:
         aplanado = [label for grupo in contenido.grupos_de_placa(tipo) for label in grupo]
         assert aplanado == contenido.SECCIONES_POR_TIPO[tipo], tipo
+
+
+def test_max_chars_seccion_da_mas_lugar_a_la_que_va_sola():
+    """"por qué funciona" ocupa su placa sola, así que tiene el alto entero
+    para ella; "el problema" comparte placa con el snippet de código."""
+    assert contenido.max_chars_seccion("tip", "por qué funciona") == contenido.MAX_CHARS_SECCION_SOLA
+    assert contenido.max_chars_seccion("tip", "el problema") == contenido.MAX_CHARS_SECCION_TEXTO
+    assert contenido.max_chars_seccion("tip", "el código") == contenido.MAX_CHARS_SECCION_TEXTO
+
+
+def test_max_chars_seccion_de_los_tipos_de_dos_secciones():
+    for tipo in ("novedad", "comparativa", "rol"):
+        for label in contenido.SECCIONES_POR_TIPO[tipo]:
+            assert contenido.max_chars_seccion(tipo, label) == contenido.MAX_CHARS_SECCION_TEXTO
+
+
+def test_max_chars_seccion_label_desconocido_usa_el_tope_chico():
+    """Un label que no está en ningún grupo cae al tope conservador en vez de
+    romper: validar() ya rechaza los labels inventados por su cuenta."""
+    assert contenido.max_chars_seccion("tip", "inventado") == contenido.MAX_CHARS_SECCION_TEXTO

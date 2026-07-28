@@ -106,6 +106,24 @@ def test_variante_clara_existe():
     assert 'class="plate variant-light"' in html
 
 
+def test_contenido_sin_titulo_no_emite_el_h2():
+    """La placa de continuación de una idea va sin título: si la plantilla
+    igual emite el <h2>, queda un hueco con el margin-top:16px del .title
+    empujando el panel para abajo sin que se vea texto alguno."""
+    html = _render("contenido", titulo="", deck="")
+
+    assert "<h2" not in html
+    assert 'class="panel"' in html
+    assert 'class="kicker"' in html
+
+
+def test_contenido_con_titulo_sigue_emitiendo_el_h2():
+    html = _render("contenido")
+
+    assert 'class="title title-medium"' in html
+    assert "TOP N EN SQL" in html
+
+
 @pytest.mark.parametrize(
     ("variant", "fondo", "texto"),
     [

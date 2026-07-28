@@ -121,16 +121,27 @@ def construir_placas(tipo: str, red: dict, variante_cover: str = "cover-green") 
         "variant": variante_cover,
     }]
     for i, idea in enumerate(red["ideas"], start=1):
-        placas.append({
-            "plantilla": "contenido",
-            "kicker": f"{palabra} {i:02d}",
-            "titulo": idea["titulo"],
-            "deck": idea.get("deck", ""),
-            "secciones": idea["secciones"],
-            # cada 3ª idea sale en placa clara: es el ritmo que evita que el
-            # carrusel se lea como un bloque oscuro uniforme
-            "variant": "light" if i % 3 == 0 else "dark",
-        })
+        por_label = {s["label"]: s for s in idea["secciones"]}
+        # cada 3ª idea sale en placa clara: es el ritmo que evita que el
+        # carrusel se lea como un bloque oscuro uniforme. Se cuenta por idea,
+        # no por placa: las placas de una misma idea comparten variante.
+        variante = "light" if i % 3 == 0 else "dark"
+        for j, grupo in enumerate(contenido.grupos_de_placa(tipo)):
+            placas.append({
+                "plantilla": "contenido",
+                "kicker": f"{palabra} {i:02d}",
+                # título y deck van solo en la primera placa de la idea: las de
+                # continuación arrancan directo con el panel (ver plantillas/
+                # contenido.html, que omite el <h2> cuando el título viene vacío)
+                "titulo": idea["titulo"] if j == 0 else "",
+                "deck": idea.get("deck", "") if j == 0 else "",
+                # los labels que no estén en la idea se descartan en vez de
+                # reventar: una respuesta rara no tiene que voltear la pieza
+                # entera. El invariante de grupos_de_placa (ver test_contenido)
+                # es lo que garantiza que acá no se pierda nada por un typo.
+                "secciones": [por_label[label] for label in grupo if label in por_label],
+                "variant": variante,
+            })
     placas.append({"plantilla": "cierre", "variant": "close"})
 
     total = len(placas)

@@ -36,6 +36,12 @@ IDEA = {"titulo": "Excel", "deck": "Limpiar filas",
         "secciones": [{"label": "cuándo conviene", "texto": "Una sola vez."},
                       {"label": "dónde duele", "texto": "No queda documentado."}]}
 
+IDEA_TIP = {"titulo": "DETECTÁ DUPLICADOS", "deck": "Encontrá qué filas se repiten.",
+            "secciones": [
+                {"label": "el problema", "texto": "Se cuelan registros idénticos."},
+                {"label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"},
+                {"label": "por qué funciona", "texto": "GROUP BY junta las filas iguales."},
+            ]}
 
 
 def test_variante_portada_es_estable_y_avanza_en_ciclo():
@@ -50,7 +56,7 @@ def test_variante_portada_es_estable_y_avanza_en_ciclo():
 
 def test_construir_placas_usa_la_variante_de_portada_indicada():
     placas = main.construir_placas(
-        "tip", {"titulo_portada": "X", "ideas": [IDEA]}, "cover-coral")
+        "comparativa", {"titulo_portada": "X", "ideas": [IDEA]}, "cover-coral")
 
     assert placas[0]["variant"] == "cover-coral"
     assert placas[1]["variant"] == "dark"
@@ -246,3 +252,55 @@ def test_plan_b_comparativa_con_opciones_objeto():
     assert "Python / pandas" in red["caption"]
     # Verifica que no hay representación dict en el caption
     assert "{'nombre'" not in red["caption"]
+
+
+def test_construir_placas_tip_usa_dos_placas_de_contenido():
+    """El tip tiene una sola idea con tres secciones: repartidas en dos placas,
+    el carrusel pasa de tres slides a cuatro."""
+    red = {"titulo_portada": "DETECTÁ\nDUPLICADOS", "ideas": [IDEA_TIP]}
+
+    placas = main.construir_placas("tip", red)
+
+    assert [p["plantilla"] for p in placas] == ["portada", "contenido", "contenido", "cierre"]
+    assert [p["slide_index"] for p in placas] == [1, 2, 3, 4]
+    assert {p["slide_total"] for p in placas} == {4}
+
+
+def test_construir_placas_tip_reparte_las_secciones_en_orden():
+    red = {"titulo_portada": "X", "ideas": [IDEA_TIP]}
+
+    placas = main.construir_placas("tip", red)
+
+    assert [s["label"] for s in placas[1]["secciones"]] == ["el problema", "el código"]
+    assert [s["label"] for s in placas[2]["secciones"]] == ["por qué funciona"]
+    # la sección de código viaja entera, con su snippet y su lenguaje
+    assert placas[1]["secciones"][1] == {
+        "label": "el código", "codigo": "SELECT 1;", "lenguaje": "sql"}
+
+
+def test_construir_placas_continuacion_va_sin_titulo_ni_deck():
+    """La segunda placa de una idea es continuación de la primera: repetir ahí
+    el título gigante y el deck le roba el lugar al texto y se lee redundante.
+    El kicker sí se repite: identifica la unidad de contenido, no la placa."""
+    red = {"titulo_portada": "X", "ideas": [IDEA_TIP]}
+
+    placas = main.construir_placas("tip", red)
+
+    assert placas[1]["titulo"] == "DETECTÁ DUPLICADOS"
+    assert placas[1]["deck"] == "Encontrá qué filas se repiten."
+    assert placas[2]["titulo"] == ""
+    assert placas[2]["deck"] == ""
+    assert placas[2]["kicker"] == placas[1]["kicker"] == "tip 01"
+
+
+def test_construir_placas_no_cambia_para_los_tipos_de_una_placa():
+    """Regresión: comparativa y rol tienen un solo grupo, así que siguen
+    emitiendo una placa por idea, con título y deck en todas."""
+    red = {"titulo_portada": "X", "ideas": [IDEA, IDEA]}
+
+    placas = main.construir_placas("comparativa", red)
+
+    assert [p["plantilla"] for p in placas] == ["portada", "contenido", "contenido", "cierre"]
+    assert all(p["titulo"] == "Excel" for p in placas[1:3])
+    assert all(p["deck"] == "Limpiar filas" for p in placas[1:3])
+    assert all(p["secciones"] == IDEA["secciones"] for p in placas[1:3])

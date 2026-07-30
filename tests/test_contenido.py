@@ -126,3 +126,49 @@ def test_ideas_desde_item_novedad_trunca_resumen_largo_en_limite_de_palabra():
     # queda tiene que ser una secuencia de palabras completas de "palabra "
     cuerpo = texto[:-1].strip()
     assert cuerpo != "" and all(p == "palabra" for p in cuerpo.split())
+
+
+def test_grupos_de_placa_tip_se_parte_en_dos():
+    """El tip es el único tipo con una sola idea: sin partirlo, sus tres
+    secciones caen todas en la misma placa y la placa queda saturada."""
+    assert contenido.grupos_de_placa("tip") == [
+        ["el problema", "el código"],
+        ["por qué funciona"],
+    ]
+
+
+def test_grupos_de_placa_los_demas_tipos_van_en_una_sola_placa():
+    """El default es lo que mantiene intactos a los otros tres tipos: un grupo
+    con todos sus labels, es decir una placa por idea, como siempre."""
+    for tipo in ("novedad", "comparativa", "rol"):
+        assert contenido.grupos_de_placa(tipo) == [contenido.SECCIONES_POR_TIPO[tipo]]
+
+
+def test_grupos_de_placa_no_pierde_ni_duplica_ni_reordena_secciones():
+    """Invariante del reparto: aplanar los grupos tiene que devolver
+    exactamente los labels del tipo, en el mismo orden. Sin esto, un typo en
+    PLACAS_POR_TIPO hace desaparecer una sección de la placa en silencio,
+    porque construir_placas descarta los labels que no reconoce."""
+    for tipo in contenido.SECCIONES_POR_TIPO:
+        aplanado = [label for grupo in contenido.grupos_de_placa(tipo) for label in grupo]
+        assert aplanado == contenido.SECCIONES_POR_TIPO[tipo], tipo
+
+
+def test_max_chars_seccion_da_mas_lugar_a_la_que_va_sola():
+    """"por qué funciona" ocupa su placa sola, así que tiene el alto entero
+    para ella; "el problema" comparte placa con el snippet de código."""
+    assert contenido.max_chars_seccion("tip", "por qué funciona") == contenido.MAX_CHARS_SECCION_SOLA
+    assert contenido.max_chars_seccion("tip", "el problema") == contenido.MAX_CHARS_SECCION_TEXTO
+    assert contenido.max_chars_seccion("tip", "el código") == contenido.MAX_CHARS_SECCION_TEXTO
+
+
+def test_max_chars_seccion_de_los_tipos_de_dos_secciones():
+    for tipo in ("novedad", "comparativa", "rol"):
+        for label in contenido.SECCIONES_POR_TIPO[tipo]:
+            assert contenido.max_chars_seccion(tipo, label) == contenido.MAX_CHARS_SECCION_TEXTO
+
+
+def test_max_chars_seccion_label_desconocido_usa_el_tope_chico():
+    """Un label que no está en ningún grupo cae al tope conservador en vez de
+    romper: validar() ya rechaza los labels inventados por su cuenta."""
+    assert contenido.max_chars_seccion("tip", "inventado") == contenido.MAX_CHARS_SECCION_TEXTO

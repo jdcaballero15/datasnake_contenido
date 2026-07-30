@@ -55,6 +55,50 @@ KICKER_POR_TIPO: dict[str, str] = {
     "tip": "tip",
 }
 
+PLACAS_POR_TIPO: dict[str, list[list[str]]] = {
+    "tip": [["el problema", "el código"], ["por qué funciona"]],
+}
+"""Cómo se reparten las secciones de UNA idea entre placas del carrusel.
+
+Solo aparece acá el tipo que necesita más de una placa. El tip es el único con
+una sola idea, así que sin repartir sus tres secciones quedan apiladas en una
+placa que se ve saturada; los demás tipos ya respiran porque emiten una placa
+por unidad (una opción, una skill, un cambio).
+
+El orden de los labels dentro de cada grupo, y el de los grupos entre sí, es el
+orden en que se ven en el carrusel."""
+
+
+def grupos_de_placa(tipo: str) -> list[list[str]]:
+    """Los grupos de secciones de <tipo>: uno por placa de contenido.
+
+    El default —un único grupo con todos los labels del tipo— es lo que deja a
+    novedad, comparativa y rol exactamente como estaban: una placa por idea."""
+    return PLACAS_POR_TIPO.get(tipo, [SECCIONES_POR_TIPO[tipo]])
+
+
+MAX_CHARS_SECCION_SOLA = 520
+"""Tope de caracteres para una sección que ocupa su placa sola.
+
+Cuando un grupo de grupos_de_placa tiene un solo label, esa sección no comparte
+el panel con nadie: tiene el alto entero de la placa para ella, así que el tope
+de MAX_CHARS_SECCION_TEXTO —calculado para dos secciones por panel— la deja
+mucho más corta de lo que entra. El valor está medido sobre el PNG renderizado
+del peor caso; ver docs/superpowers/plans/2026-07-28-tip-en-dos-placas.md."""
+
+
+def max_chars_seccion(tipo: str, label: str) -> int:
+    """El tope de caracteres del texto de <label> en <tipo>, según comparta
+    placa o no.
+
+    Un label que no pertenece a ningún grupo cae al tope conservador: validar()
+    ya rechaza los labels inventados por su cuenta, y no es tarea de esta
+    función decidir eso."""
+    for grupo in grupos_de_placa(tipo):
+        if label in grupo:
+            return MAX_CHARS_SECCION_SOLA if len(grupo) == 1 else MAX_CHARS_SECCION_TEXTO
+    return MAX_CHARS_SECCION_TEXTO
+
 
 def secciones_que_redacta_gemini(tipo: str) -> list[str]:
     """Los labels que Gemini debe devolver para <tipo>, en el orden esperado.

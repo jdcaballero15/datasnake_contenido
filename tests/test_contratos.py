@@ -148,3 +148,37 @@ def test_validar_rechaza_texto_de_seccion_que_no_es_string():
     ]}
     with pytest.raises(ValueError):
         validar("novedad", {**BASE, "ideas": [idea]})
+
+
+def test_validar_acepta_por_que_funciona_largo_porque_va_solo_en_su_placa():
+    """En el tip, "por qué funciona" ocupa una placa entera (ver
+    contenido.grupos_de_placa), así que el tope de 260 —pensado para dos
+    secciones por placa— no aplica: ahí entra bastante más texto."""
+    from src.contenido import MAX_CHARS_SECCION_TEXTO
+    idea = {"titulo": "t", "deck": "d", "secciones": [
+        {"label": "el problema", "texto": "corto"},
+        {"label": "por qué funciona", "texto": "x" * (MAX_CHARS_SECCION_TEXTO + 100)},
+    ]}
+
+    validar("tip", {**BASE, "ideas": [idea], "codigo": "SELECT 1;"})  # no levanta
+
+
+def test_validar_rechaza_por_que_funciona_arriba_del_tope_de_seccion_sola():
+    from src.contenido import MAX_CHARS_SECCION_SOLA
+    idea = {"titulo": "t", "deck": "d", "secciones": [
+        {"label": "el problema", "texto": "corto"},
+        {"label": "por qué funciona", "texto": "x" * (MAX_CHARS_SECCION_SOLA + 1)},
+    ]}
+
+    with pytest.raises(ValueError, match="texto"):
+        validar("tip", {**BASE, "ideas": [idea], "codigo": "SELECT 1;"})
+
+
+def test_validar_rechaza_el_problema_largo_porque_comparte_placa_con_el_codigo():
+    idea = {"titulo": "t", "deck": "d", "secciones": [
+        {"label": "el problema", "texto": "x" * (contratos.MAX_CHARS_SECCION_TEXTO + 1)},
+        {"label": "por qué funciona", "texto": "corto"},
+    ]}
+
+    with pytest.raises(ValueError, match="texto"):
+        validar("tip", {**BASE, "ideas": [idea], "codigo": "SELECT 1;"})

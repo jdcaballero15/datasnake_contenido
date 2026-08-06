@@ -87,6 +87,23 @@ jobs:
           # duplicaba el lote y dejaba un ParaSubir/ParaSubir/ anidado (2026-07-18).
           rclone copy salida/ gdrive: --exclude "ParaSubir/**"
 
+      # Va acá a propósito, apenas el lote quedó a salvo en Drive, y NO al final.
+      # Estaba último y sin `if: always()`: el 2026-08-06 GitHub dejó el deploy de
+      # Pages colgado en "queued" y lo abortó por timeout, así que este paso ni
+      # corrió — el lote estaba en Drive pero usados.json nunca se commiteó y los
+      # temas del día quedaron marcados como libres (riesgo de repetirlos mañana).
+      # Tampoco alcanza con `if: always()` acá abajo: si falla la subida a Drive
+      # NO hay que marcar los temas como usados. El punto correcto para commitear
+      # es justo después de que el contenido quedó guardado; de ahí en más, lo que
+      # falle (página, Pages) es cosmético y no debe borrar el estado del día.
+      - name: Commitear estado
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add estado/*.json
+          git commit -m "estado: corrida $(date +%F)" || echo "sin cambios"
+          git push || echo "sin push"
+
       - name: Bajar lotes recientes de Drive
         env:
           RCLONE_CONFIG_GDRIVE_TYPE: drive
@@ -119,11 +136,3 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with: { name: lote, path: salida/, retention-days: 14 }
-
-      - name: Commitear estado
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git add estado/*.json
-          git commit -m "estado: corrida $(date +%F)" || echo "sin cambios"
-          git push || echo "sin push"

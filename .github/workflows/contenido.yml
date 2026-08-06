@@ -29,6 +29,14 @@ on:
     # días, incluido el 27/07 entero. Fuera del minuto 0 la cosa mejora bastante.
     - cron: "37 10 * * *"   # todos los días 10:37 UTC = 07:37 ARG
 
+# Serializa los deploys a Pages, que es el patrón que recomienda la doc de GitHub.
+# `cancel-in-progress: false` a propósito: NO queremos cortar un deploy a mitad de
+# camino (dejar deploys colgados es justo lo que traba la cola del entorno); si dos
+# corridas se superponen, la segunda espera a que la primera termine.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
   generar:
     runs-on: ubuntu-latest
@@ -131,6 +139,12 @@ jobs:
       - name: Publicar en Pages
         id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # El default son 10 min y se queda corto. En la degradación de Pages de
+          # jul-ago 2026 (2026-08-06 acá) el deploy se acepta pero queda en
+          # "deployment_queued" 10-20 min antes de arrancar, así que el action lo
+          # abortaba justo antes de que la cola lo levantara. En milisegundos.
+          timeout: 1500000   # 25 min
 
       - name: Guardar lote como artifact (respaldo)
         if: always()

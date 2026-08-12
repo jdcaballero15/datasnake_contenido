@@ -73,3 +73,25 @@ def test_prompt_tip_sigue_pidiendo_el_problema_corto():
     p = prompts.prompt_tip(item)
 
     assert "1-2 oraciones" in p
+
+
+def test_los_prompts_declaran_el_tope_de_caracteres_de_seccion():
+    """El validador rechaza secciones de más de MAX_CHARS_SECCION_TEXTO, pero
+    el prompt solo pedía "1-2 oraciones": Gemini escribía 295-331 chars de
+    buena fe y la pieza caía a plan B (corrida 2026-08-11). El número sale de
+    contenido.py para que no pueda desincronizarse del validador."""
+    from src.contenido import MAX_CHARS_SECCION_TEXTO
+
+    tope = str(MAX_CHARS_SECCION_TEXTO)
+    generados = [
+        prompts.prompt_novedad({"fuente": "f", "titulo": "t", "resumen": "r"}),
+        prompts.prompt_comparativa({"tarea": "t", "veredicto": "v", "opciones": [
+            {"nombre": "A", "cuando_conviene": "x.", "donde_duele": "y."}]}),
+        prompts.prompt_rol({"rol": "r", "gancho": "g", "herramientas": ["SQL"],
+                            "skills": [{"nombre": "s", "por_que": "p", "como_practicar": "c"}]}),
+        prompts.prompt_tip({"titulo": "x", "lenguaje": "sql", "gancho": "g",
+                            "codigo": "SELECT 1;", "explicacion": "e"}),
+    ]
+
+    for p in generados:
+        assert tope in p

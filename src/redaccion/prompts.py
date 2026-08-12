@@ -3,6 +3,8 @@
 Para cambiar el tono de la cuenta, este archivo es EL lugar (junto con config.py).
 """
 
+from src.contenido import MAX_CHARS_SECCION_TEXTO
+
 VOZ_DE_MARCA = """\
 Sos la voz de "Data Snake", una cuenta sobre analítica de datos, herramientas y
 carreras en el mundo data. Hablás en español rioplatense (voseo), cercano y
@@ -24,13 +26,15 @@ desarrollá en criollo y cerrá con el para-qué. SIN llamados a la acción (los
 agregamos nosotros). "hashtags": 4 a 5, sin #, en minúsculas, del mundo
 data/tech (ej. data, sql, powerbi, python, analytics)."""
 
-REGLAS_IDEAS = """\
+REGLAS_IDEAS = f"""\
 Cada "idea" es UNA placa del carrusel y va con: "titulo" (1-3 palabras, entra
 gigante), "deck" (una oración que resume la idea) y "secciones". Las secciones
 tienen LABELS FIJOS que no podés cambiar ni inventar: usá exactamente los que te
-pido, todos, en ese orden. Cada "texto" de sección: 1-2 oraciones, concretas, en
-lenguaje simple (traducí el término técnico la primera vez), sin números
-inventados."""
+pido, todos, en ese orden. Cada "texto" de sección: 1-2 oraciones y COMO MÁXIMO
+{MAX_CHARS_SECCION_TEXTO} caracteres, contando espacios. El tope es físico: la
+placa recorta lo que se pasa, así que una sección más larga hace descartar la
+pieza entera. Concretas, en lenguaje simple (traducí el término técnico la
+primera vez), sin números inventados."""
 
 _CIERRE = """Responde SOLO con un JSON válido, exactamente con esta forma:"""
 
@@ -59,8 +63,8 @@ material.
     "titulo": "<el cambio, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "qué cambió", "texto": "<1-2 oraciones>"}},
-      {{"label": "por qué importa", "texto": "<1-2 oraciones>"}}
+      {{"label": "qué cambió", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "por qué importa", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}}
     ]
   }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
@@ -93,8 +97,8 @@ idea por opción. Concreto y honesto, sin fanatismos de herramienta.
     "titulo": "<la opción, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "cuándo conviene", "texto": "<1-2 oraciones>"}},
-      {{"label": "dónde duele", "texto": "<1-2 oraciones>"}}
+      {{"label": "cuándo conviene", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "dónde duele", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}}
     ]
   }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
@@ -129,8 +133,8 @@ evalúa apuntar a ese rol.
     "titulo": "<la skill, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "por qué te la piden", "texto": "<1-2 oraciones>"}},
-      {{"label": "cómo la practicás", "texto": "<1-2 oraciones>"}}
+      {{"label": "por qué te la piden", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "cómo la practicás", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}}
     ]
   }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
@@ -168,7 +172,7 @@ comparte placa con el código, así que ahí sí van 1-2 oraciones.
     "titulo": "<el tip, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "el problema", "texto": "<1-2 oraciones>"}},
+      {{"label": "el problema", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
       {{"label": "por qué funciona", "texto": "<3-4 oraciones, ~350-500 caracteres>"}}
     ]
   }}],

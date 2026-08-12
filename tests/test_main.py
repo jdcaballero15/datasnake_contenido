@@ -304,3 +304,58 @@ def test_construir_placas_no_cambia_para_los_tipos_de_una_placa():
     assert all(p["titulo"] == "Excel" for p in placas[1:3])
     assert all(p["deck"] == "Limpiar filas" for p in placas[1:3])
     assert all(p["secciones"] == IDEA["secciones"] for p in placas[1:3])
+
+
+def test_novedad_en_plan_b_se_reemplaza_por_un_evergreen(monkeypatch, tmp_path):
+    """El plan B de novedad copia título y resumen del RSS tal cual, y los
+    feeds son en inglés: es la única ruta capaz de publicar en un idioma que
+    no es el de la marca (corrida 2026-08-11). Ante la duda va un evergreen,
+    que siempre está escrito en español en los bancos."""
+    cfg = get_config()
+    cfg.dir_estado = tmp_path
+
+    def gemini_siempre_falla(prompt, key):
+        raise main.GeminiError("sin cuota")
+
+    monkeypatch.setattr(main, "generar_json", gemini_siempre_falla)
+    monkeypatch.setattr(main.time, "sleep", lambda _s: None)
+
+    piezas = [{"tipo": "novedad", "item": {
+        "id": "http://x/1", "fuente": "Power BI",
+        "titulo": "Announcing new Copilot features",
+        "resumen": "Today we are announcing a set of improvements.",
+    }}]
+
+    redacciones, novedad_descartada = main.redactar_lote(cfg, piezas, seed=202627)
+
+    assert novedad_descartada is True
+    assert piezas[0]["tipo"] in cfg.tipos_evergreen
+    assert len(redacciones) == 1
+    assert "Announcing new Copilot features" not in redacciones[0]["caption"]
+    assert "Today we are announcing" not in redacciones[0]["caption"]
+    assert "ANNOUNCING" not in redacciones[0]["titulo_portada"]
+    assert "COPILOT" not in redacciones[0]["titulo_portada"]
+
+
+def test_evergreen_en_plan_b_no_se_reemplaza(monkeypatch, tmp_path):
+    """El plan B de los evergreen sale de los bancos, que están en español:
+    ese camino no tiene nada de malo y se conserva tal cual."""
+    cfg = get_config()
+    cfg.dir_estado = tmp_path
+
+    def gemini_siempre_falla(prompt, key):
+        raise main.GeminiError("sin cuota")
+
+    monkeypatch.setattr(main, "generar_json", gemini_siempre_falla)
+    monkeypatch.setattr(main.time, "sleep", lambda _s: None)
+
+    item = {"id": "t01", "titulo": "Rankear sin subconsultas", "lenguaje": "sql",
+            "gancho": "Top N por grupo", "codigo": "SELECT 1;",
+            "explicacion": "ROW_NUMBER numera dentro de cada grupo."}
+    piezas = [{"tipo": "tip", "item": item}]
+
+    redacciones, novedad_descartada = main.redactar_lote(cfg, piezas, seed=202627)
+
+    assert novedad_descartada is False
+    assert piezas[0]["tipo"] == "tip"
+    assert redacciones[0]["plan_b"] is True

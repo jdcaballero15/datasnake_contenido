@@ -103,6 +103,42 @@ def redactar_pieza(tipo: str, item: dict, cfg: Config) -> dict:
     return plan_b(tipo, item)
 
 
+def redactar_lote(cfg: Config, piezas: list[dict], seed: int) -> tuple[list[dict], bool]:
+    """Redacta cada pieza del lote. Devuelve (redacciones, novedad_descartada).
+
+    Si la novedad cae a plan B, se reemplaza por un evergreen: plan_b("novedad")
+    arma el caption con el título y el resumen del RSS tal cual, y los feeds son
+    en inglés, así que ese camino publica en un idioma que no es el de la marca
+    (pasó en la corrida 2026-08-11). Los bancos evergreen están escritos en
+    español, así que ante la duda va eso.
+
+    Muta `piezas` in-place cuando sustituye, para que registrar_usados y
+    armar_pieza vean el item que realmente se publicó.
+    """
+    redacciones: list[dict] = []
+    novedad_descartada = False
+    for i, pieza in enumerate(piezas):
+        red = redactar_pieza(pieza["tipo"], pieza["item"], cfg)
+        if pieza["tipo"] == "novedad" and red.get("plan_b"):
+            log.warning("Plan B de novedad: publicaría el RSS en inglés, va un evergreen")
+            tipo_ev = cfg.tipos_evergreen[seed % len(cfg.tipos_evergreen)]
+            banco, _ = TIPOS[tipo_ev]
+            item = seleccionar(cfg, banco, 1, seed + 100 + i)[0]
+            piezas[i] = {"tipo": tipo_ev, "item": item}
+            # se reintenta con Gemini a propósito: el fallo puede haber sido del
+            # material de la novedad (largo, formato) y no del modelo. Si vuelve
+            # a fallar, el plan B del evergreen ya está en español.
+            # La sustitución es justo el escenario de rate-limit (la novedad ya
+            # gastó 2 intentos fallidos), así que respetamos la misma pausa
+            # entre llamadas que el resto del lote antes de reintentar.
+            time.sleep(cfg.pausa_entre_llamadas)
+            red = redactar_pieza(tipo_ev, item, cfg)
+            novedad_descartada = True
+        redacciones.append(red)
+        time.sleep(cfg.pausa_entre_llamadas)
+    return redacciones, novedad_descartada
+
+
 def armar_caption(cuerpo: str, hashtags: list[str]) -> str:
     tags = " ".join(f"#{h.lstrip('#')}" for h in hashtags[:5])
     return f"{cuerpo.rstrip()}\n\n{CTA_COMPARTIR}\n{CTA_GUARDAR}\n\n{tags}"
@@ -243,14 +279,12 @@ def main(argv=None) -> int:
         piezas = [{"tipo": t, "item": {"id": "dry"}} for t in TIPOS]
         redacciones = [DRY_RUN[p["tipo"]] for p in piezas]
         novedad = None
+        novedad_descartada = False
     else:
         seed = hoy.toordinal()
         novedad = feeds.elegir_novedad(cfg)
         piezas = plan_dia(cfg, seed, novedad)
-        redacciones = []
-        for p in piezas:
-            redacciones.append(redactar_pieza(p["tipo"], p["item"], cfg))
-            time.sleep(cfg.pausa_entre_llamadas)
+        redacciones, novedad_descartada = redactar_lote(cfg, piezas, seed)
 
     fallidas = 0
     with Renderer(cfg) as renderer:
@@ -266,7 +300,9 @@ def main(argv=None) -> int:
         exportar.exportar(lote_dia, cfg.dir_salida / "ParaSubir" / lote_dia.name)
 
     if not args.dry_run:
-        if novedad:
+        # si la novedad se descartó, no se marca como vista: sigue disponible
+        # para la corrida de mañana, cuando Gemini puede andar bien
+        if novedad and not novedad_descartada:
             feeds.registrar_vista(cfg, novedad["id"])
         for tipo, (banco, _) in TIPOS.items():
             if banco:

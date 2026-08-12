@@ -3,6 +3,8 @@
 Para cambiar el tono de la cuenta, este archivo es EL lugar (junto con config.py).
 """
 
+from src.contenido import MAX_CHARS_SECCION_SOLA, MAX_CHARS_SECCION_TEXTO
+
 VOZ_DE_MARCA = """\
 Sos la voz de "Data Snake", una cuenta sobre analítica de datos, herramientas y
 carreras en el mundo data. Hablás en español rioplatense (voseo), cercano y
@@ -24,13 +26,30 @@ desarrollá en criollo y cerrá con el para-qué. SIN llamados a la acción (los
 agregamos nosotros). "hashtags": 4 a 5, sin #, en minúsculas, del mundo
 data/tech (ej. data, sql, powerbi, python, analytics)."""
 
-REGLAS_IDEAS = """\
+REGLAS_IDEAS = f"""\
 Cada "idea" es UNA placa del carrusel y va con: "titulo" (1-3 palabras, entra
 gigante), "deck" (una oración que resume la idea) y "secciones". Las secciones
 tienen LABELS FIJOS que no podés cambiar ni inventar: usá exactamente los que te
-pido, todos, en ese orden. Cada "texto" de sección: 1-2 oraciones, concretas, en
-lenguaje simple (traducí el término técnico la primera vez), sin números
-inventados."""
+pido, todos, en ese orden. Cada "texto" de sección: 1-2 oraciones y COMO MÁXIMO
+{MAX_CHARS_SECCION_TEXTO} caracteres, contando espacios, salvo que el esqueleto
+JSON indique otro tope para una sección puntual. El tope es físico: la placa
+recorta lo que se pasa, así que una sección más larga hace descartar la pieza
+entera. Concretas, en lenguaje simple (traducí el término técnico la primera
+vez), sin números inventados."""
+
+_MARGEN_BAJO_TOPE_SOLA = 20
+"""Margen bajo MAX_CHARS_SECCION_SOLA para el piso/techo que le pedimos al
+modelo en una sección que ocupa su placa sola (hoy, "por qué funciona" del
+tip): pedirle que escriba justo hasta el tope real no deja aire para que el
+modelo varíe de buena fe y se pase, como pasó con MAX_CHARS_SECCION_TEXTO
+(ver su comentario en contenido.py)."""
+
+TIP_PORQUE_FUNCIONA_MAX = MAX_CHARS_SECCION_SOLA - _MARGEN_BAJO_TOPE_SOLA
+TIP_PORQUE_FUNCIONA_MIN = TIP_PORQUE_FUNCIONA_MAX - 150
+"""Banda de caracteres que el prompt del tip le pide a Gemini para "por qué
+funciona", derivada de MAX_CHARS_SECCION_SOLA (520) igual que REGLAS_IDEAS
+deriva su tope de MAX_CHARS_SECCION_TEXTO: así ninguno de los dos números
+puede desincronizarse en silencio del tope real que aplica contratos.validar."""
 
 _CIERRE = """Responde SOLO con un JSON válido, exactamente con esta forma:"""
 
@@ -48,6 +67,9 @@ trabajo). Si el material describe un solo cambio, una sola idea; no inventes
 cambios que no estén en el material. No exageres ni prometas lo que no dice el
 material.
 
+El material viene en inglés: traducilo y reescribilo en español rioplatense.
+Nunca copies el título ni el resumen tal cual, ni siquiera en "titulo_portada".
+
 {REGLAS_IDEAS}
 
 {REGLAS_CAPTION}
@@ -59,8 +81,8 @@ material.
     "titulo": "<el cambio, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "qué cambió", "texto": "<1-2 oraciones>"}},
-      {{"label": "por qué importa", "texto": "<1-2 oraciones>"}}
+      {{"label": "qué cambió", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "por qué importa", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}}
     ]
   }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
@@ -93,8 +115,8 @@ idea por opción. Concreto y honesto, sin fanatismos de herramienta.
     "titulo": "<la opción, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "cuándo conviene", "texto": "<1-2 oraciones>"}},
-      {{"label": "dónde duele", "texto": "<1-2 oraciones>"}}
+      {{"label": "cuándo conviene", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "dónde duele", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}}
     ]
   }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
@@ -129,8 +151,8 @@ evalúa apuntar a ese rol.
     "titulo": "<la skill, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "por qué te la piden", "texto": "<1-2 oraciones>"}},
-      {{"label": "cómo la practicás", "texto": "<1-2 oraciones>"}}
+      {{"label": "por qué te la piden", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "cómo la practicás", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}}
     ]
   }}],
   "caption": "<6-10 oraciones, ~600-900 caracteres>",
@@ -155,9 +177,10 @@ repitas dentro de "secciones".
 {REGLAS_IDEAS}
 
 En este tipo, "por qué funciona" va SOLA en su propia placa del carrusel: ahí
-tenés lugar de sobra, así que escribí 3-4 oraciones (~350-500 caracteres) que
-expliquen la mecánica paso a paso y para qué le sirve a quien lee. "el problema"
-comparte placa con el código, así que ahí sí van 1-2 oraciones.
+tenés lugar de sobra, así que escribí 3-4 oraciones
+(~{TIP_PORQUE_FUNCIONA_MIN}-{TIP_PORQUE_FUNCIONA_MAX} caracteres) que
+expliquen la mecánica paso a paso y para qué le sirve a quien lee. "el
+problema" comparte placa con el código, así que ahí sí van 1-2 oraciones.
 
 {REGLAS_CAPTION}
 
@@ -168,8 +191,8 @@ comparte placa con el código, así que ahí sí van 1-2 oraciones.
     "titulo": "<el tip, 1-3 palabras>",
     "deck": "<una oración>",
     "secciones": [
-      {{"label": "el problema", "texto": "<1-2 oraciones>"}},
-      {{"label": "por qué funciona", "texto": "<3-4 oraciones, ~350-500 caracteres>"}}
+      {{"label": "el problema", "texto": "<1-2 oraciones, máx {MAX_CHARS_SECCION_TEXTO} caracteres>"}},
+      {{"label": "por qué funciona", "texto": "<3-4 oraciones, ~{TIP_PORQUE_FUNCIONA_MIN}-{TIP_PORQUE_FUNCIONA_MAX} caracteres>"}}
     ]
   }}],
   "codigo": "<el código, con saltos de línea reales>",

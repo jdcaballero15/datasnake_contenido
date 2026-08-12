@@ -333,6 +333,8 @@ def test_novedad_en_plan_b_se_reemplaza_por_un_evergreen(monkeypatch, tmp_path):
     assert len(redacciones) == 1
     assert "Announcing new Copilot features" not in redacciones[0]["caption"]
     assert "Today we are announcing" not in redacciones[0]["caption"]
+    assert "ANNOUNCING" not in redacciones[0]["titulo_portada"]
+    assert "COPILOT" not in redacciones[0]["titulo_portada"]
 
 
 def test_evergreen_en_plan_b_no_se_reemplaza(monkeypatch, tmp_path):

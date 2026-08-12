@@ -128,6 +128,10 @@ def redactar_lote(cfg: Config, piezas: list[dict], seed: int) -> tuple[list[dict
             # se reintenta con Gemini a propósito: el fallo puede haber sido del
             # material de la novedad (largo, formato) y no del modelo. Si vuelve
             # a fallar, el plan B del evergreen ya está en español.
+            # La sustitución es justo el escenario de rate-limit (la novedad ya
+            # gastó 2 intentos fallidos), así que respetamos la misma pausa
+            # entre llamadas que el resto del lote antes de reintentar.
+            time.sleep(cfg.pausa_entre_llamadas)
             red = redactar_pieza(tipo_ev, item, cfg)
             novedad_descartada = True
         redacciones.append(red)
